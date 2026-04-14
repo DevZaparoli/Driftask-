@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driftask — your flow, your pace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="dark"] {
+      --bg-page:        #080810;
+      --bg-glass:       rgba(255,255,255,0.05);
+      --bg-glass-hover: rgba(255,255,255,0.09);
+      --bg-input:       rgba(255,255,255,0.07);
+      --bg-btn:         rgba(255,255,255,0.08);
+      --bg-sidebar:     rgba(10,10,22,0.95);
+      --bg-card:        rgba(255,255,255,0.04);
+      --bg-card-hover:  rgba(255,255,255,0.08);
+      --border:         rgba(255,255,255,0.10);
+      --border-hover:   rgba(255,255,255,0.22);
+      --border-input:   rgba(255,255,255,0.12);
+      --text-1:   #f0eeff;
+      --text-2:   #9893b8;
+      --text-3:   #5a5680;
+      --accent:         #a78bfa;
+      --accent-rgb:     167,139,250;
+      --accent-glow:    rgba(167,139,250,0.25);
+      --accent-soft:    rgba(167,139,250,0.12);
+      --grad-1: #1a0533;
+      --grad-2: #0a1628;
+      --grad-3: #0d0d1a;
+      --blur: blur(20px);
+      --shadow-card:  0 4px 24px rgba(0,0,0,0.3);
+      --shadow-float: 0 8px 32px rgba(0,0,0,0.4);
+      --font-display: 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', sans-serif;
+      --font-size-base: 14px;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
+    [data-theme="light"] {
+      --bg-page:        #eef2ff;
+      --bg-glass:       rgba(255,255,255,0.55);
+      --bg-glass-hover: rgba(255,255,255,0.75);
+      --bg-input:       rgba(255,255,255,0.70);
+      --bg-btn:         rgba(255,255,255,0.60);
+      --bg-sidebar:     rgba(235,238,255,0.97);
+      --bg-card:        rgba(255,255,255,0.50);
+      --bg-card-hover:  rgba(255,255,255,0.80);
+      --border:         rgba(120,100,200,0.15);
+      --border-hover:   rgba(120,100,200,0.35);
+      --border-input:   rgba(120,100,200,0.20);
+      --text-1:   #1a1730;
+      --text-2:   #5a5680;
+      --text-3:   #9893b8;
+      --accent:         #7c3aed;
+      --accent-rgb:     124,58,237;
+      --accent-glow:    rgba(124,58,237,0.20);
+      --accent-soft:    rgba(124,58,237,0.10);
+      --grad-1: #ddd6fe;
+      --grad-2: #bfdbfe;
+      --grad-3: #e0e7ff;
+      --shadow-card:  0 4px 20px rgba(100,80,200,0.10);
+      --shadow-float: 0 8px 32px rgba(100,80,200,0.18);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: var(--font-size-base); scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-page);
+      color: var(--text-1);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+    .bg-mesh { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.45;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .bg-orb:nth-child(1) { width:600px; height:600px; background:var(--grad-1); top:-200px; left:-200px; animation-delay:0s; }
+    .bg-orb:nth-child(2) { width:500px; height:500px; background:var(--grad-2); bottom:-150px; right:-150px; animation-delay:-6s; }
+    .bg-orb:nth-child(3) { width:400px; height:400px; background:var(--grad-3); top:40%; left:40%; animation-delay:-12s; }
+    @keyframes drift {
+      0%   { transform: translate(0,0) scale(1); }
+      33%  { transform: translate(40px,-30px) scale(1.05); }
+      66%  { transform: translate(-20px,40px) scale(0.97); }
+      100% { transform: translate(30px,20px) scale(1.03); }
+    }
+    .app { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 32px 20px 100px; }
+
+    /* HEADER */
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 16px; flex-wrap: wrap; }
+    .logo { display: flex; flex-direction: column; line-height: 1; }
+    .logo-name { font-family: var(--font-display); font-size: clamp(26px,5vw,42px); font-weight: 800; letter-spacing: -1.5px; color: var(--text-1); transition: color 0.4s; }
+    .logo-name .d-letter  { color: var(--accent); transition: color 0.4s; }
+    .logo-name .dot-accent { display: inline-block; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; margin-left: 3px; margin-bottom: 6px; vertical-align: bottom; transition: background 0.4s; }
+    .logo-tagline { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-top: 4px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .icon-btn { width: 42px; height: 42px; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-2); font-size: 18px; user-select: none; transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s; }
+    .icon-btn:hover { background: var(--bg-glass-hover); border-color: var(--border-hover); color: var(--text-1); transform: translateY(-1px); }
+    .icon-btn.spin span { animation: spin-once 0.5s cubic-bezier(0.4,0,0.2,1); }
+    @keyframes spin-once { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    /* CLOCK BAR */
+    .clock-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px 18px;
+      margin-bottom: 20px; backdrop-filter: var(--blur);
+      flex-wrap: wrap; gap: 8px;
+    }
+    .clock-time { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .clock-date { font-size: 12px; color: var(--text-2); }
+    .clock-right { display: flex; align-items: center; gap: 10px; }
+
+    /* PERFIL SWITCHER */
+    .profile-switcher { display: flex; gap: 6px; }
+    .profile-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 99px;
+      border: 1px solid var(--border); background: transparent;
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      color: var(--text-2); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .profile-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .profile-btn:hover:not(.active) { border-color: var(--border-hover); color: var(--text-1); }
+    .profile-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ADD BAR */
+    .add-bar { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; }
+    .add-bar input {
+      flex: 1; min-width: 180px; background: var(--bg-input);
+      border: 1px solid var(--border-input); border-radius: var(--radius-md);
+      padding: 14px 18px; font-family: var(--font-body); font-size: 14px;
+      color: var(--text-1); outline: none;
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .add-bar input::placeholder { color: var(--text-3); }
+    .add-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .prio-select {
+      background: var(--bg-input); border: 1px solid var(--border-input);
+      border-radius: var(--radius-md); padding: 0 32px 0 14px;
+      font-family: var(--font-body); font-size: 13px; color: var(--text-2);
+      outline: none; cursor: pointer; min-height: 50px;
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239893b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .prio-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .prio-select option { background: #1a1730; color: var(--text-1); }
+    .add-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-md); padding: 14px 26px;
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.2s;
+    }
+    .add-btn:hover { opacity: 0.88; transform: translateY(-2px); animation: pulse-glow 1.4s ease-in-out infinite; }
+    .add-btn:active { transform: scale(0.97) translateY(0); }
+    @keyframes pulse-glow {
+      0%,100% { box-shadow: 0 4px 16px var(--accent-glow); }
+      50%     { box-shadow: 0 4px 28px rgba(var(--accent-rgb),0.45); }
+    }
+
+    /* BOARD */
+    .board { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; align-items: start; }
+
+    /* COLUNA */
+    .column {
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;
+      min-height: 440px; transition: background 0.3s, border-color 0.3s, box-shadow 0.4s;
+      box-shadow: 0 0 40px color-mix(in srgb, var(--col-color,#888) 18%, transparent),
+        inset 0 0 40px color-mix(in srgb, var(--col-color,#888) 6%, transparent);
+    }
+    .column-header { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 4px; flex-wrap: wrap; }
+    .column-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--col-color, #888); box-shadow: 0 0 8px var(--col-color, #888); transition: background 0.4s, box-shadow 0.4s; }
+    .column-title { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--col-color, #888); transition: color 0.4s; }
+    .column-count { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-3); background: var(--bg-btn); border: 1px solid var(--border); border-radius: 99px; padding: 2px 10px; min-width: 28px; text-align: center; transition: all 0.3s; }
+    .column-count.bump { animation: count-bump 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes count-bump { 0%{transform:scale(1)} 50%{transform:scale(1.45)} 100%{transform:scale(1)} }
+
+    /* ALERTA 20+ TAREFAS */
+    .col-alert {
+      display: none; align-items: center; gap: 7px;
+      background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
+      border-radius: 8px; padding: 7px 10px;
+      font-size: 11px; color: #f59e0b; font-weight: 600;
+      animation: alert-in 0.3s ease both;
+    }
+    .col-alert.show { display: flex; }
+    @keyframes alert-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+    /* PAGINAÇÃO */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; padding-top: 8px; }
+    .page-btn {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent;
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+    }
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* CARDS */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--col-color, #888);
+      border-radius: var(--radius-md); padding: 14px 14px 12px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-card);
+      transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      animation: card-in 0.28s cubic-bezier(0.34,1.4,0.64,1) both;
+    }
+    @keyframes card-in { from{opacity:0;transform:translateY(14px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .card:hover { background: var(--bg-card-hover); border-color: var(--col-color, #888); transform: translateY(-3px); box-shadow: var(--shadow-float), 0 0 16px color-mix(in srgb, var(--col-color,#888) 22%, transparent); }
+    .col-done .card .card-text { text-decoration: line-through; opacity: 0.6; }
+    .card.removing { animation: card-out 0.22s cubic-bezier(0.4,0,1,1) both; pointer-events: none; overflow: hidden; }
+    @keyframes card-out { from{opacity:1;transform:scale(1);max-height:200px;margin-bottom:0} to{opacity:0;transform:scale(0.92) translateY(-8px);max-height:0;margin-bottom:-10px;padding:0} }
+    .card-text { font-size: 13.5px; line-height: 1.55; color: var(--text-1); word-break: break-word; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .card-date { font-size: 10px; color: var(--text-3); font-weight: 500; }
+    .card-time { font-size: 10px; color: var(--text-3); font-weight: 400; }
+    .card-profile-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .badge-pessoal  { background: rgba(52,211,153,0.15); color: #34d399; }
+    .badge-profissional { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .card-actions { display: flex; gap: 5px; }
+    .card-btn { font-size: 11px; font-family: var(--font-body); font-weight: 500; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-3); cursor: pointer; transition: all 0.15s; line-height: 1.4; position: relative; }
+    .card-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    .card-btn.delete:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.4); }
+    .card-btn[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.78); color: #fff; font-size: 10px; white-space: nowrap; padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+    .card-btn[data-tip]:hover::after { opacity: 1; }
+
+    /* PRIORIDADE BADGE */
+    .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none; border: 1px solid transparent; transition: transform 0.15s, opacity 0.15s; }
+    .prio-badge:hover { transform: scale(1.08); opacity: 0.85; }
+    .prio-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .prio-high   { background: rgba(239,68,68,0.15);  color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .prio-medium { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+    .prio-low    { background: rgba(59,130,246,0.15); color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+
+    /* EMPTY STATE */
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); font-size: 12px; text-align: center; padding: 28px 16px; border: 1px dashed var(--border); border-radius: var(--radius-md); opacity: 0.7; user-select: none; }
+    .empty-state-icon { font-size: 24px; opacity: 0.5; }
+
+    /* CONFETTI */
+    .confetti-piece { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: confetti-fall 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+    @keyframes confetti-fall { 0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)} 80%{opacity:1} 100%{opacity:0;transform:translateY(260px) rotate(720deg) scale(0.4)} }
+
+    /* SIDEBAR */
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .sidebar-overlay.open { opacity: 1; pointer-events: all; }
+    .sidebar { position: fixed; top: 0; right: 0; height: 100%; width: 310px; background: var(--bg-sidebar); border-left: 1px solid var(--border); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); z-index: 101; padding: 28px 22px; display: flex; flex-direction: column; gap: 22px; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-header { display: flex; align-items: center; justify-content: space-between; }
+    .sidebar-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-1); }
+    .sidebar-close { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-btn); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: var(--text-2); transition: all 0.15s; }
+    .sidebar-close:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 0 -4px; }
+    .setting-section { display: flex; flex-direction: column; gap: 12px; }
+    .setting-label { font-size: 11px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-3); }
+    .accent-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; }
+    .accent-swatch { width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s; }
+    .accent-swatch:hover  { transform: scale(1.12); }
+    .accent-swatch.active { border-color: var(--text-1); transform: scale(1.12); }
+    .col-color-list { display: flex; flex-direction: column; gap: 10px; }
+    .col-color-row { display: flex; align-items: center; gap: 10px; background: var(--bg-btn); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; transition: border-color 0.2s; }
+    .col-color-row:hover { border-color: var(--border-hover); }
+    .col-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s, box-shadow 0.3s; }
+    .col-color-label { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-1); }
+    .col-color-input { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); padding: 2px; cursor: pointer; background: transparent; outline: none; }
+    .col-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .col-color-input::-webkit-color-swatch { border-radius: 4px; border: none; }
+    .col-color-input::-moz-color-swatch { border-radius: 4px; border: none; }
+    .col-presets { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 2px; }
+    .col-preset { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s; }
+    .col-preset:hover { transform: scale(1.25); border-color: var(--text-1); }
+    .font-size-btns { display: flex; gap: 8px; }
+    .font-size-btn { flex: 1; padding: 8px 4px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-btn); color: var(--text-2); cursor: pointer; font-family: var(--font-body); font-weight: 500; transition: all 0.15s; text-align: center; }
+    .font-size-btn:hover, .font-size-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    .col-rename-list { display: flex; flex-direction: column; gap: 8px; }
+    .col-rename-item { display: flex; align-items: center; gap: 8px; }
+    .col-rename-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .col-rename-input { flex: 1; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: 8px; padding: 8px 12px; font-family: var(--font-body); font-size: 13px; color: var(--text-1); outline: none; transition: border-color 0.2s; }
+    .col-rename-input:focus { border-color: var(--accent); }
+
+    /* FAB BOTÃO IA */
+    .fab-btn {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 24px var(--accent-glow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-size: 22px;
+      animation: fab-pulse 3s ease-in-out infinite;
+    }
+    .fab-btn:hover { transform: scale(1.12); box-shadow: 0 8px 32px var(--accent-glow); }
+    @keyframes fab-pulse {
+      0%,100% { box-shadow: 0 6px 24px var(--accent-glow); }
+      50% { box-shadow: 0 6px 36px rgba(var(--accent-rgb),0.55); }
+    }
+    .fab-tooltip {
+      position: fixed; bottom: 90px; right: 28px; z-index: 200;
+      background: var(--bg-sidebar); border: 1px solid var(--border);
+      border-radius: 10px; padding: 7px 14px;
+      font-size: 12px; color: var(--text-2); white-space: nowrap;
+      opacity: 0; pointer-events: none; transform: translateY(6px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .fab-btn:hover + .fab-tooltip { opacity: 1; transform: translateY(0); }
+
+    /* POP-UP IA */
+    .ai-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.3s; display: flex; align-items: flex-end; justify-content: flex-end; padding: 90px 28px; }
+    .ai-overlay.open { opacity: 1; pointer-events: all; }
+    .ai-popup {
+      background: var(--bg-sidebar); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); width: 380px; max-width: 95vw;
+      padding: 24px; display: flex; flex-direction: column; gap: 16px;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
+      max-height: 80vh; overflow: hidden;
+    }
+    .ai-overlay.open .ai-popup { transform: translateY(0) scale(1); }
+    .ai-popup-header { display: flex; align-items: center; justify-content: space-between; }
+    .ai-popup-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+    .ai-popup-title span { font-size: 20px; }
+    .ai-popup-close { width: 28px; height: 28px; border-radius: 8px; background: var(--bg-btn); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: var(--text-2); transition: all 0.15s; }
+    .ai-popup-close:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .ai-context-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ai-context-btn { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+    .ai-context-btn.active, .ai-context-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .ai-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 280px; }
+    .ai-msg { padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.55; animation: card-in 0.25s ease both; }
+    .ai-msg.bot { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-1); border-bottom-left-radius: 4px; }
+    .ai-msg.user { background: var(--accent-soft); border: 1px solid rgba(var(--accent-rgb),0.2); color: var(--text-1); text-align: right; border-bottom-right-radius: 4px; }
+    .ai-msg.loading { color: var(--text-3); font-style: italic; }
+    .ai-input-row { display: flex; gap: 8px; }
+    .ai-input {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border-input);
+      border-radius: var(--radius-md); padding: 10px 14px;
+      font-family: var(--font-body); font-size: 13px; color: var(--text-1);
+      outline: none; transition: border-color 0.2s;
+      resize: none; min-height: 40px; max-height: 100px;
+    }
+    .ai-input:focus { border-color: var(--accent); }
+    .ai-send-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md); padding: 0 16px; font-weight: 700; font-size: 16px; cursor: pointer; transition: opacity 0.15s; }
+    .ai-send-btn:hover { opacity: 0.85; }
+    .ai-suggestions { display: flex; flex-direction: column; gap: 6px; }
+    .ai-sug-btn { text-align: left; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); font-size: 12px; color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+    .ai-sug-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+    @media (max-width: 860px) {
+      .board { grid-template-columns: 1fr; }
+      .column { min-height: auto; }
+      .sidebar { top: auto; bottom: 0; right: 0; left: 0; width: 100%; height: 88vh; border-left: none; border-top: 1px solid var(--border); border-radius: var(--radius-xl) var(--radius-xl) 0 0; transform: translateY(100%); }
+      .sidebar.open { transform: translateY(0); }
+      .ai-overlay { padding: 16px; align-items: flex-end; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .app { padding: 20px 14px 90px; }
+      .add-bar { flex-direction: column; }
+      .add-btn { width: 100%; }
+      .fab-btn { bottom: 20px; right: 20px; }
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+  </style>
+</head>
+<body>
+
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+  </div>
+
+  <div class="app">
+
+    <header>
+      <div class="logo">
+        <div class="logo-name"><span class="d-letter">D</span>riftask<span class="dot-accent"></span></div>
+        <div class="logo-tagline">your flow, your pace</div>
+      </div>
+      <div class="header-actions">
+        <div class="icon-btn" id="theme-btn" title="Alternar tema" onclick="toggleTheme(this)"><span id="theme-icon">🌙</span></div>
+        <div class="icon-btn" title="Personalizar" onclick="openSidebar()"><span>⚙</span></div>
+      </div>
+    </header>
+
+    <!-- BARRA DE RELÓGIO + PERFIS -->
+    <div class="clock-bar">
+      <div>
+        <div class="clock-time" id="clock-time">--:--:--</div>
+        <div class="clock-date" id="clock-date">...</div>
+      </div>
+      <div class="clock-right">
+        <div class="profile-switcher">
+          <button class="profile-btn active" id="btn-pessoal" onclick="switchProfile('pessoal')">
+            <span class="profile-dot" style="background:#34d399"></span> Pessoal
+          </button>
+          <button class="profile-btn" id="btn-profissional" onclick="switchProfile('profissional')">
+            <span class="profile-dot" style="background:#60a5fa"></span> Profissional
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA DE ADICIONAR -->
+    <div class="add-bar">
+      <input type="text" id="task-input" placeholder="O que está na sua cabeça agora?" maxlength="200" />
+      <select id="prio-input" class="prio-select" title="Prioridade">
+        <option value="low">🔵 Baixa</option>
+        <option value="medium" selected>🟡 Média</option>
+        <option value="high">🔴 Alta</option>
+      </select>
+      <button class="add-btn" onclick="addTask()">+ Adicionar</button>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board" id="board">
+
+      <div class="column col-todo" id="col-todo">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title" data-col="todo">A Fazer</span>
+          <span class="column-count" id="count-todo">0</span>
+        </div>
+        <div class="col-alert" id="alert-todo">⚠ Mais de 20 anotações nesta coluna!</div>
+        <div class="cards-area" id="cards-todo"></div>
+        <div class="empty-state" id="empty-todo"><span class="empty-state-icon">✦</span><span>Nenhuma tarefa ainda</span></div>
+        <div class="pagination" id="pages-todo"></div>
+      </div>
+
+      <div class="column col-doing" id="col-doing">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title" data-col="doing">Em Andamento</span>
+          <span class="column-count" id="count-doing">0</span>
+        </div>
+        <div class="col-alert" id="alert-doing">⚠ Mais de 20 anotações nesta coluna!</div>
+        <div class="cards-area" id="cards-doing"></div>
+        <div class="empty-state" id="empty-doing"><span class="empty-state-icon">✦</span><span>Nenhuma tarefa ainda</span></div>
+        <div class="pagination" id="pages-doing"></div>
+      </div>
+
+      <div class="column col-done" id="col-done">
+        <div class="column-header">
+          <span class="column-dot"></span>
+          <span class="column-title" data-col="done">Concluído</span>
+          <span class="column-count" id="count-done">0</span>
+        </div>
+        <div class="col-alert" id="alert-done">⚠ Mais de 20 anotações nesta coluna!</div>
+        <div class="cards-area" id="cards-done"></div>
+        <div class="empty-state" id="empty-done"><span class="empty-state-icon">✦</span><span>Nenhuma tarefa ainda</span></div>
+        <div class="pagination" id="pages-done"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB IA -->
+  <button class="fab-btn" onclick="openAI()" title="Solicitar ideia com IA">✦</button>
+  <div class="fab-tooltip">Pedir ideia com IA</div>
+
+  <!-- POP-UP IA -->
+  <div class="ai-overlay" id="ai-overlay" onclick="closeAIOutside(event)">
+    <div class="ai-popup" id="ai-popup">
+      <div class="ai-popup-header">
+        <div class="ai-popup-title"><span>✦</span> Assistente de Ideias</div>
+        <div class="ai-popup-close" onclick="closeAI()">✕</div>
+      </div>
+      <div class="ai-context-row">
+        <button class="ai-context-btn active" id="ctx-todo" onclick="setCtx('todo')">A Fazer</button>
+        <button class="ai-context-btn" id="ctx-doing" onclick="setCtx('doing')">Em Andamento</button>
+        <button class="ai-context-btn" id="ctx-done" onclick="setCtx('done')">Concluído</button>
+        <button class="ai-context-btn" id="ctx-geral" onclick="setCtx('geral')">Geral</button>
+      </div>
+      <div class="ai-suggestions" id="ai-suggestions">
+        <div style="font-size:11px;color:var(--text-3)">Sugestões rápidas:</div>
+        <button class="ai-sug-btn" onclick="sendSuggestion(this)">Sugira 3 tarefas para organizar meu dia</button>
+        <button class="ai-sug-btn" onclick="sendSuggestion(this)">Quais tarefas devo priorizar agora?</button>
+        <button class="ai-sug-btn" onclick="sendSuggestion(this)">Me dê ideias para aumentar produtividade</button>
+      </div>
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-msg bot">Olá! Sou seu assistente de ideias. Posso sugerir tarefas, ajudar a priorizar ou dar dicas de produtividade. Como posso ajudar? 🚀</div>
+      </div>
+      <div class="ai-input-row">
+        <textarea class="ai-input" id="ai-input" placeholder="Peça uma ideia, tarefa ou dica..." rows="1"></textarea>
+        <button class="ai-send-btn" onclick="sendAI()">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">✦ Personalizar</span>
+      <div class="sidebar-close" onclick="closeSidebar()">✕</div>
+    </div>
+    <div class="setting-section">
+      <div class="setting-label">Cor de destaque global</div>
+      <div class="accent-grid" id="accent-grid"></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="setting-section">
+      <div class="setting-label">Cores das colunas</div>
+      <div class="col-color-list">
+        <div class="col-color-row">
+          <span class="col-color-dot" id="dot-preview-todo"></span>
+          <span class="col-color-label" id="col-label-todo">A Fazer</span>
+          <input class="col-color-input" type="color" id="color-picker-todo" oninput="applyColColor('todo', this.value)" />
+        </div>
+        <div class="col-presets" id="presets-todo"></div>
+        <div class="col-color-row" style="margin-top:4px">
+          <span class="col-color-dot" id="dot-preview-doing"></span>
+          <span class="col-color-label" id="col-label-doing">Em Andamento</span>
+          <input class="col-color-input" type="color" id="color-picker-doing" oninput="applyColColor('doing', this.value)" />
+        </div>
+        <div class="col-presets" id="presets-doing"></div>
+        <div class="col-color-row" style="margin-top:4px">
+          <span class="col-color-dot" id="dot-preview-done"></span>
+          <span class="col-color-label" id="col-label-done">Concluído</span>
+          <input class="col-color-input" type="color" id="color-picker-done" oninput="applyColColor('done', this.value)" />
+        </div>
+        <div class="col-presets" id="presets-done"></div>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="setting-section">
+      <div class="setting-label">Tamanho da fonte</div>
+      <div class="font-size-btns">
+        <button class="font-size-btn" data-size="13" onclick="setFontSize(this)">Pequeno</button>
+        <button class="font-size-btn active" data-size="14" onclick="setFontSize(this)">Médio</button>
+        <button class="font-size-btn" data-size="16" onclick="setFontSize(this)">Grande</button>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="setting-section">
+      <div class="setting-label">Nome das colunas</div>
+      <div class="col-rename-list">
+        <div class="col-rename-item">
+          <span class="col-rename-dot" id="rename-dot-todo"></span>
+          <input class="col-rename-input" id="rename-todo" placeholder="A Fazer" maxlength="20" oninput="renameCol('todo', this.value)" />
+        </div>
+        <div class="col-rename-item">
+          <span class="col-rename-dot" id="rename-dot-doing"></span>
+          <input class="col-rename-input" id="rename-doing" placeholder="Em Andamento" maxlength="20" oninput="renameCol('doing', this.value)" />
+        </div>
+        <div class="col-rename-item">
+          <span class="col-rename-dot" id="rename-dot-done"></span>
+          <input class="col-rename-input" id="rename-done" placeholder="Concluído" maxlength="20" oninput="renameCol('done', this.value)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================
+       ESTADO GLOBAL
+    ================================================ */
+    const STATE = {
+      tasks:    [],
+      theme:    'dark',
+      accent:   '#a78bfa',
+      fontSize: 14,
+      profile:  'pessoal',
+      colNames: { todo:'A Fazer', doing:'Em Andamento', done:'Concluído' },
+      colColors: { todo:'#f59e0b', doing:'#a78bfa', done:'#10b981' },
+      pages: { todo: 1, doing: 1, done: 1 }
+    };
+    const PAGE_SIZE = 8;
+
+    function saveState() { localStorage.setItem('driftask_v5', JSON.stringify(STATE)); }
+    function loadState() {
+      const saved = localStorage.getItem('driftask_v5');
+      if (!saved) return;
+      const p = JSON.parse(saved);
+      if (p.tasks)     STATE.tasks     = p.tasks;
+      if (p.theme)     STATE.theme     = p.theme;
+      if (p.accent)    STATE.accent    = p.accent;
+      if (p.fontSize)  STATE.fontSize  = p.fontSize;
+      if (p.profile)   STATE.profile   = p.profile;
+      if (p.colNames)  STATE.colNames  = { ...STATE.colNames, ...p.colNames };
+      if (p.colColors) STATE.colColors = { ...STATE.colColors, ...p.colColors };
+      if (p.pages)     STATE.pages     = { ...STATE.pages, ...p.pages };
+    }
+
+    /* ================================================
+       RELÓGIO EM TEMPO REAL
+    ================================================ */
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2,'0');
+      const m = String(now.getMinutes()).padStart(2,'0');
+      const s = String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
+      const days = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      document.getElementById('clock-date').textContent =
+        `${days[now.getDay()]}, ${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+    }
+    setInterval(updateClock, 1000);
+
+    /* ================================================
+       PERFIS
+    ================================================ */
+    function switchProfile(p) {
+      STATE.profile = p;
+      document.getElementById('btn-pessoal').classList.toggle('active', p === 'pessoal');
+      document.getElementById('btn-profissional').classList.toggle('active', p === 'profissional');
+      STATE.pages = { todo:1, doing:1, done:1 };
+      saveState(); renderAll();
+    }
+
+    /* ================================================
+       CORES DAS COLUNAS
+    ================================================ */
+    const COL_PALETTES = {
+      todo:  ['#f59e0b','#ef4444','#f97316','#ec4899','#06b6d4','#8b5cf6'],
+      doing: ['#a78bfa','#6366f1','#3b82f6','#0ea5e9','#14b8a6','#84cc16'],
+      done:  ['#10b981','#22c55e','#84cc16','#06b6d4','#a78bfa','#f59e0b']
+    };
+    function applyColColor(col, color) {
+      STATE.colColors[col] = color;
+      const colEl = document.getElementById(`col-${col}`);
+      if (colEl) colEl.style.setProperty('--col-color', color);
+      const pd = document.getElementById(`dot-preview-${col}`);
+      if (pd) { pd.style.background = color; pd.style.boxShadow = `0 0 6px ${color}`; }
+      const rd = document.getElementById(`rename-dot-${col}`);
+      if (rd) rd.style.background = color;
+      const pk = document.getElementById(`color-picker-${col}`);
+      if (pk) pk.value = color;
+      saveState(); renderAll();
+    }
+    function applyAllColColors() {
+      ['todo','doing','done'].forEach(col => applyColColor(col, STATE.colColors[col]));
+    }
+    function buildColPresets() {
+      ['todo','doing','done'].forEach(col => {
+        const container = document.getElementById(`presets-${col}`);
+        if (!container) return;
+        container.innerHTML = '';
+        COL_PALETTES[col].forEach(color => {
+          const dot = document.createElement('div');
+          dot.className = 'col-preset'; dot.style.background = color; dot.title = color;
+          dot.onclick = () => applyColColor(col, color);
+          container.appendChild(dot);
+        });
+      });
+    }
+
+    /* ================================================
+       PLACEHOLDER ROTATIVO
+    ================================================ */
+    const PLACEHOLDERS = [
+      'O que está na sua cabeça agora?','Qual tarefa você está evitando?',
+      'Uma coisa que faria diferença hoje...','O que você não quer esquecer?',
+      'Próximo passo mais simples?','Algo pendente que te incomoda?',
+      'O que você prometeu fazer?','Qual ideia não sai da sua cabeça?',
+    ];
+    let phIndex = 0;
+    function rotatePlaceholder() {
+      const input = document.getElementById('task-input');
+      if (input && document.activeElement !== input) {
+        phIndex = (phIndex + 1) % PLACEHOLDERS.length;
+        input.placeholder = PLACEHOLDERS[phIndex];
+      }
+    }
+    setInterval(rotatePlaceholder, 4000);
+
+    /* ================================================
+       CONFETTI
+    ================================================ */
+    function launchConfetti(x, y) {
+      const colors = ['#a78bfa','#f59e0b','#10b981','#f472b6','#22d3ee','#fb923c'];
+      for (let i = 0; i < 24; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.cssText = `left:${x+(Math.random()-0.5)*140}px;top:${y+(Math.random()-0.5)*50}px;background:${colors[i%colors.length]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-delay:${(Math.random()*0.25).toFixed(2)}s;animation-duration:${(0.8+Math.random()*0.6).toFixed(2)}s;`;
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove());
+      }
+    }
+
+    /* ================================================
+       FORMATO DE DATA/HORA
+    ================================================ */
+    function formatDateTime(iso) {
+      const d = new Date(iso);
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      const date = `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]}`;
+      const time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return { date, time };
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
+    }
+
+    /* ================================================
+       PRIORIDADE
+    ================================================ */
+    function getPrioInfo(p) {
+      if (p === 'high')   return { cls: 'prio-high',   label: 'Alta' };
+      if (p === 'medium') return { cls: 'prio-medium', label: 'Média' };
+      return                     { cls: 'prio-low',    label: 'Baixa' };
+    }
+    function cyclePriority(id) {
+      const task = STATE.tasks.find(t => t.id === id);
+      if (!task) return;
+      const cycle = ['low','medium','high'];
+      task.priority = cycle[(cycle.indexOf(task.priority||'medium') + 1) % 3];
+      saveState(); renderAll();
+    }
+
+    /* ================================================
+       CRIAR CARD
+    ================================================ */
+    function createCardEl(task) {
+      const card = document.createElement('div');
+      card.className = 'card'; card.dataset.id = task.id;
+      let moveBtns = '';
+      if (task.col === 'todo') {
+        moveBtns = `<button class="card-btn" data-tip="Mover para Em Andamento" onclick="moveTask('${task.id}','doing')">→</button>`;
+      } else if (task.col === 'doing') {
+        moveBtns = `<button class="card-btn" data-tip="Voltar para A Fazer" onclick="moveTask('${task.id}','todo')">←</button><button class="card-btn" data-tip="Marcar como Concluído" onclick="moveTask('${task.id}','done')">✓</button>`;
+      } else if (task.col === 'done') {
+        moveBtns = `<button class="card-btn" data-tip="Reabrir tarefa" onclick="moveTask('${task.id}','doing')">↩</button>`;
+      }
+      const { date, time } = formatDateTime(task.date);
+      const pi = getPrioInfo(task.priority || 'medium');
+      const profileCls = task.profile === 'profissional' ? 'badge-profissional' : 'badge-pessoal';
+      const profileLabel = task.profile === 'profissional' ? 'Prof.' : 'Pess.';
+      card.innerHTML = `
+        <div class="card-text">${escapeHtml(task.text)}</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span class="card-date">${date}</span>
+            <span class="card-time">${time}</span>
+            <span class="card-profile-badge ${profileCls}">${profileLabel}</span>
+            <span class="prio-badge ${pi.cls}" title="Clique para alterar prioridade" onclick="cyclePriority('${task.id}')">${pi.label}</span>
+          </div>
+          <div class="card-actions">
+            ${moveBtns}
+            <button class="card-btn delete" data-tip="Excluir" onclick="deleteTask('${task.id}')">✕</button>
+          </div>
+        </div>`;
+      return card;
+    }
+
+    /* ================================================
+       RENDERIZAÇÃO COM PAGINAÇÃO
+    ================================================ */
+    function renderAll() {
+      ['todo','doing','done'].forEach(col => {
+        const area  = document.getElementById(`cards-${col}`);
+        const empty = document.getElementById(`empty-${col}`);
+        const count = document.getElementById(`count-${col}`);
+        const alert = document.getElementById(`alert-${col}`);
+        const pages = document.getElementById(`pages-${col}`);
+
+        const allTasks = STATE.tasks.filter(t => t.col === col && t.profile === STATE.profile);
+        const total = allTasks.length;
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        STATE.pages[col] = Math.min(STATE.pages[col] || 1, totalPages);
+        const curPage = STATE.pages[col];
+
+        const start = (curPage - 1) * PAGE_SIZE;
+        const pageTasks = allTasks.slice(start, start + PAGE_SIZE);
+
+        area.innerHTML = '';
+        empty.style.display = total === 0 ? 'flex' : 'none';
+        count.textContent = total;
+        alert.classList.toggle('show', total > 20);
+
+        pageTasks.forEach(task => area.appendChild(createCardEl(task)));
+
+        /* paginação */
+        pages.innerHTML = '';
+        if (totalPages > 1) {
+          const prev = document.createElement('button');
+          prev.className = 'page-btn'; prev.textContent = '‹';
+          prev.disabled = curPage === 1;
+          prev.onclick = () => { STATE.pages[col] = curPage - 1; saveState(); renderAll(); };
+          pages.appendChild(prev);
+
+          for (let p = 1; p <= totalPages; p++) {
+            if (totalPages > 7 && p > 2 && p < totalPages - 1 && Math.abs(p - curPage) > 1) {
+              if (p === 3 || p === totalPages - 2) {
+                const dots = document.createElement('span');
+                dots.style.cssText = 'font-size:11px;color:var(--text-3);padding:0 4px;';
+                dots.textContent = '…';
+                pages.appendChild(dots);
+              }
+              continue;
+            }
+            const btn = document.createElement('button');
+            btn.className = 'page-btn' + (p === curPage ? ' active' : '');
+            btn.textContent = p;
+            btn.onclick = () => { STATE.pages[col] = p; saveState(); renderAll(); };
+            pages.appendChild(btn);
+          }
+
+          const next = document.createElement('button');
+          next.className = 'page-btn'; next.textContent = '›';
+          next.disabled = curPage === totalPages;
+          next.onclick = () => { STATE.pages[col] = curPage + 1; saveState(); renderAll(); };
+          pages.appendChild(next);
+        }
+      });
+    }
+
+    /* ================================================
+       ADICIONAR / MOVER / DELETAR
+    ================================================ */
+    function addTask() {
+      const input = document.getElementById('task-input');
+      const prio  = document.getElementById('prio-input');
+      const text  = input.value.trim();
+      if (!text) {
+        input.style.animation = 'none';
+        void input.offsetHeight;
+        input.style.animation = 'shake 0.3s ease';
+        return;
+      }
+      STATE.tasks.unshift({
+        id:       'task_' + Date.now(),
+        text,
+        col:      'todo',
+        priority: prio ? prio.value : 'medium',
+        profile:  STATE.profile,
+        date:     new Date().toISOString()
+      });
+      input.value = '';
+      input.focus(); /* mantém foco após adicionar */
+      STATE.pages.todo = 1;
+      saveState(); renderAll(); bumpCounter('todo');
+    }
+
+    function moveTask(id, newCol) {
+      const task = STATE.tasks.find(t => t.id === id);
+      if (!task) return;
+      const oldCol = task.col;
+      task.col = newCol;
+      STATE.pages[newCol] = 1;
+      saveState(); renderAll();
+      bumpCounter(oldCol); bumpCounter(newCol);
+      if (newCol === 'done') {
+        const colEl = document.getElementById('col-done');
+        const rect = colEl ? colEl.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0 };
+        launchConfetti(rect.left + rect.width / 2, rect.top + 60);
+      }
+    }
+
+    function deleteTask(id) {
+      const cardEl = document.querySelector(`[data-id="${id}"]`);
+      if (!cardEl) return;
+      cardEl.classList.add('removing');
+      cardEl.addEventListener('animationend', () => {
+        const task = STATE.tasks.find(t => t.id === id);
+        if (task) bumpCounter(task.col);
+        STATE.tasks = STATE.tasks.filter(t => t.id !== id);
+        saveState(); renderAll();
+      }, { once: true });
+    }
+
+    function bumpCounter(col) {
+      const el = document.getElementById(`count-${col}`);
+      if (!el) return;
+      el.classList.remove('bump'); void el.offsetHeight; el.classList.add('bump');
+    }
+
+    document.getElementById('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+    /* ================================================
+       TEMA
+    ================================================ */
+    function toggleTheme(btn) {
+      STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', STATE.theme);
+      document.getElementById('theme-icon').textContent = STATE.theme === 'dark' ? '🌙' : '☀️';
+      btn.classList.remove('spin'); void btn.offsetHeight; btn.classList.add('spin');
+      saveState();
+    }
+    function applyTheme() {
+      document.documentElement.setAttribute('data-theme', STATE.theme);
+      document.getElementById('theme-icon').textContent = STATE.theme === 'dark' ? '🌙' : '☀️';
+    }
+
+    /* ================================================
+       ACCENT GLOBAL
+    ================================================ */
+    const ACCENTS = [
+      { name:'Lavanda',   dark:'#a78bfa', light:'#7c3aed' },
+      { name:'Rosa',      dark:'#f472b6', light:'#db2777' },
+      { name:'Cyan',      dark:'#22d3ee', light:'#0891b2' },
+      { name:'Esmeralda', dark:'#34d399', light:'#059669' },
+      { name:'Âmbar',     dark:'#fbbf24', light:'#d97706' },
+      { name:'Coral',     dark:'#fb7185', light:'#e11d48' },
+    ];
+    function buildAccentGrid() {
+      const grid = document.getElementById('accent-grid');
+      grid.innerHTML = '';
+      ACCENTS.forEach((a, i) => {
+        const swatch = document.createElement('div');
+        swatch.className = 'accent-swatch'; swatch.title = a.name;
+        const color = STATE.theme === 'dark' ? a.dark : a.light;
+        swatch.style.background = color;
+        if (STATE.accent === a.dark || STATE.accent === a.light) swatch.classList.add('active');
+        swatch.onclick = () => applyAccent(color, i);
+        grid.appendChild(swatch);
+      });
+    }
+    function applyAccent(color, idx) {
+      STATE.accent = color;
+      const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
+      const root = document.documentElement;
+      root.style.setProperty('--accent', color);
+      root.style.setProperty('--accent-rgb', `${r},${g},${b}`);
+      root.style.setProperty('--accent-glow', `rgba(${r},${g},${b},0.25)`);
+      root.style.setProperty('--accent-soft', `rgba(${r},${g},${b},0.12)`);
+      document.querySelectorAll('.accent-swatch').forEach((s,i) => s.classList.toggle('active', i === idx));
+      saveState();
+    }
+    function applyAccentFromSaved() {
+      if (!STATE.accent) return;
+      const c = STATE.accent;
+      const r = parseInt(c.slice(1,3),16), g = parseInt(c.slice(3,5),16), b = parseInt(c.slice(5,7),16);
+      const root = document.documentElement;
+      root.style.setProperty('--accent', c);
+      root.style.setProperty('--accent-rgb', `${r},${g},${b}`);
+      root.style.setProperty('--accent-glow', `rgba(${r},${g},${b},0.25)`);
+      root.style.setProperty('--accent-soft', `rgba(${r},${g},${b},0.12)`);
+    }
+
+    /* ================================================
+       TAMANHO DE FONTE
+    ================================================ */
+    function setFontSize(btn) {
+      STATE.fontSize = parseInt(btn.dataset.size);
+      document.documentElement.style.setProperty('--font-size-base', STATE.fontSize + 'px');
+      document.querySelectorAll('.font-size-btn').forEach(b => b.classList.toggle('active', b === btn));
+      saveState();
+    }
+    function applyFontSize() {
+      document.documentElement.style.setProperty('--font-size-base', STATE.fontSize + 'px');
+      document.querySelectorAll('.font-size-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.size) === STATE.fontSize));
+    }
+
+    /* ================================================
+       RENOMEAR COLUNAS
+    ================================================ */
+    function renameCol(col, value) {
+      const DEFAULT = { todo:'A Fazer', doing:'Em Andamento', done:'Concluído' };
+      const name = value.trim() || DEFAULT[col];
+      STATE.colNames[col] = name;
+      const titleEl = document.querySelector(`[data-col="${col}"]`);
+      if (titleEl) titleEl.textContent = name;
+      const labelEl = document.getElementById(`col-label-${col}`);
+      if (labelEl) labelEl.textContent = name;
+      saveState();
+    }
+    function applyColNames() {
+      const DEFAULT = { todo:'A Fazer', doing:'Em Andamento', done:'Concluído' };
+      ['todo','doing','done'].forEach(col => {
+        const name = STATE.colNames[col] || DEFAULT[col];
+        const titleEl = document.querySelector(`[data-col="${col}"]`);
+        if (titleEl) titleEl.textContent = name;
+        const labelEl = document.getElementById(`col-label-${col}`);
+        if (labelEl) labelEl.textContent = name;
+        const input = document.getElementById(`rename-${col}`);
+        if (input) input.value = name;
+      });
+    }
+
+    /* ================================================
+       SIDEBAR
+    ================================================ */
+    function openSidebar() {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('sidebar-overlay').classList.add('open');
+      buildAccentGrid(); buildColPresets();
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+
+    /* ================================================
+       POP-UP IA
+    ================================================ */
+    let aiCtx = 'todo';
+    function openAI() {
+      document.getElementById('ai-overlay').classList.add('open');
+      setTimeout(() => document.getElementById('ai-input').focus(), 400);
+    }
+    function closeAI() { document.getElementById('ai-overlay').classList.remove('open'); }
+    function closeAIOutside(e) { if (e.target === document.getElementById('ai-overlay')) closeAI(); }
+    function setCtx(ctx) {
+      aiCtx = ctx;
+      ['todo','doing','done','geral'].forEach(c => document.getElementById('ctx-'+c).classList.toggle('active', c === ctx));
+    }
+    function sendSuggestion(btn) {
+      document.getElementById('ai-input').value = btn.textContent;
+      sendAI();
+    }
+    async function sendAI() {
+      const input = document.getElementById('ai-input');
+      const msgs  = document.getElementById('ai-messages');
+      const text  = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      /* Mensagem do usuário */
+      const userEl = document.createElement('div');
+      userEl.className = 'ai-msg user'; userEl.textContent = text;
+      msgs.appendChild(userEl); msgs.scrollTop = msgs.scrollHeight;
+
+      /* Loading */
+      const loadEl = document.createElement('div');
+      loadEl.className = 'ai-msg loading'; loadEl.textContent = 'Pensando...';
+      msgs.appendChild(loadEl); msgs.scrollTop = msgs.scrollHeight;
+
+      /* Contexto das tarefas */
+      const colName = aiCtx === 'geral' ? 'todas as colunas' : STATE.colNames[aiCtx] || aiCtx;
+      const relTasks = aiCtx === 'geral'
+        ? STATE.tasks.filter(t => t.profile === STATE.profile)
+        : STATE.tasks.filter(t => t.col === aiCtx && t.profile === STATE.profile);
+      const taskList = relTasks.slice(0, 10).map(t => `- ${t.text} (${getPrioInfo(t.priority||'medium').label})`).join('\n');
+      const profileLabel = STATE.profile === 'profissional' ? 'profissional' : 'pessoal';
+
+      const systemPrompt = `Você é um assistente de produtividade integrado ao Driftask, um app kanban. O usuário está no perfil "${profileLabel}", coluna "${colName}". Tarefas atuais:\n${taskList || 'Nenhuma tarefa ainda.'}\nResponda de forma objetiva, prática e em português brasileiro. Use máximo 3 parágrafos curtos.`;
+
+      // =====================================================
+      // CONFIGURAÇÃO: troque pela URL do seu backend após hospedar.
+      // Ex: 'https://driftask-api.onrender.com/api/ai'
+      //     'https://driftask-api.railway.app/api/ai'
+      const AI_ENDPOINT = 'https://SEU-BACKEND.onrender.com/api/ai';
+      // =====================================================
+
+      try {
+        const res = await fetch(AI_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: systemPrompt,
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: text }]
+          })
+        });
+        const data = await res.json();
+        loadEl.remove();
+        if (data.error) throw new Error(data.error);
+        const reply = data.content?.map(b => b.text || '').join('') || 'Não consegui gerar resposta.';
+        const botEl = document.createElement('div');
+        botEl.className = 'ai-msg bot'; botEl.textContent = reply;
+        msgs.appendChild(botEl); msgs.scrollTop = msgs.scrollHeight;
+      } catch(err) {
+        loadEl.textContent = `Erro: ${err.message || 'Não foi possível conectar ao servidor.'}`;
+        loadEl.style.color = '#ef4444';
+      }
+    }
+    document.getElementById('ai-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(); }
+    });
+
+    /* ================================================
+       PERFIL — BOTÕES INICIAIS
+    ================================================ */
+    function applyProfile() {
+      document.getElementById('btn-pessoal').classList.toggle('active', STATE.profile === 'pessoal');
+      document.getElementById('btn-profissional').classList.toggle('active', STATE.profile === 'profissional');
+    }
+
+    /* ================================================
+       INIT
+    ================================================ */
+    function init() {
+      loadState();
+      applyTheme();
+      applyAccentFromSaved();
+      applyFontSize();
+      applyColNames();
+      applyAllColColors();
+      applyProfile();
+      updateClock();
+      renderAll();
+    }
+    init();
+  </script>
+</body>
+</html>
