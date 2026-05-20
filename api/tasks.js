@@ -1,64 +1,98 @@
-// No ficheiro tasks.js (Substitua as primeiras linhas)
-import { MongoClient } from 'mongodb';
+import clientPromise from '../lib/mongodb';
 import jwt from 'jsonwebtoken';
 
-const uri = process.env.MONGODB_URI;
-const jwtSecret = process.env.JWT_SECRET || 'driftask_secret_super_key';
-let cachedClient = null;
-
-async function connectToDatabase() {
-  if (cachedClient) return cachedClient.db('driftask_db');
-  const client = new MongoClient(uri);
-  await client.connect();
-  cachedClient = client;
-  return client.db('driftask_db');
-}
+const jwtSecret = process.env.JWT_SECRET;
 
 function verifyUserToken(req) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) return null;
+
+  const token = authHeader.split(' ')[1];
+
   if (!token) return null;
-  try { return jwt.verify(token, jwtSecret); } catch (e) { return null; }
+
+  try {
+    return jwt.verify(token, jwtSecret);
+  } catch {
+    return null;
+  }
 }
 
 export default async function handler(req, res) {
-  // O resto do código permanece igual, apenas mudando a exportação para a linha abaixo
 
-module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   const userSession = verifyUserToken(req);
-  if (!userSession) return res.status(401).json({ error: 'Sessão inválida ou expirada. Faça login novamente.' });
+
+  if (!userSession) {
+    return res.status(401).json({
+      error: 'Token inválido'
+    });
+  }
 
   try {
-    const db = await connectToDatabase();
+
+    const client = await clientPromise;
+
+    const db = client.db('driftask_db');
+
     const tasksCollection = db.collection('user_tasks');
 
-    // BUSCAR TAREFAS DO USUÁRIO NO MONGODB
     if (req.method === 'GET') {
-      const userDoc = await tasksCollection.findOne({ email: userSession.email });
-      return res.status(200).json({ tasks: userDoc ? userDoc.tasks : [] });
+
+      const userDoc = await tasksCollection.findOne({
+        email: userSession.email
+      });
+
+      return res.status(200).json({
+        tasks: userDoc?.tasks || []
+      });
     }
 
-    // SALVAR TAREFAS DO USUÁRIO NO MONGODB
     if (req.method === 'POST') {
+
       const { tasks } = req.body;
-      if (!Array.isArray(tasks)) return res.status(400).json({ error: 'Formato inválido.' });
+
+      if (!Array.isArray(tasks)) {
+        return res.status(400).json({
+          error: 'Tasks inválidas'
+        });
+      }
 
       await tasksCollection.updateOne(
         { email: userSession.email },
-        { $set: { tasks, updatedAt: new Date() } },
+        {
+          $set: {
+            tasks,
+            updatedAt: new Date()
+          }
+        },
         { upsert: true }
       );
-      return res.status(200).json({ message: 'Sincronizado!' });
+
+      return res.status(200).json({
+        success: true
+      });
     }
 
-    return res.status(405).json({ error: 'Método não permitido' });
+    return res.status(405).json({
+      error: 'Método não permitido'
+    });
+
   } catch (error) {
-    return res.status(500).json({ error: 'Erro ao processar as tarefas' });
+
+    console.error('TASK ERROR:', error);
+
+    return res.status(500).json({
+      error: error.message
+    });
   }
-};
+}
