@@ -1,8 +1,9 @@
-const { MongoClient } = require('mongodb');
-const jwt = require('jsonwebtoken');
+// No ficheiro tasks.js (Substitua as primeiras linhas)
+import { MongoClient } from 'mongodb';
+import jwt from 'jsonwebtoken';
 
 const uri = process.env.MONGODB_URI;
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_SECRET || 'driftask_secret_super_key';
 let cachedClient = null;
 
 async function connectToDatabase() {
@@ -19,6 +20,9 @@ function verifyUserToken(req) {
   if (!token) return null;
   try { return jwt.verify(token, jwtSecret); } catch (e) { return null; }
 }
+
+export default async function handler(req, res) {
+  // O resto do código permanece igual, apenas mudando a exportação para a linha abaixo
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
