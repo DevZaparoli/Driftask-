@@ -714,23 +714,28 @@
 
   <div class="app">
 
-    <header>
-      <div class="logo">
-        <div class="logo-name"><span class="d-letter">D</span>riftask<span class="dot-accent"></span></div>
-        <div class="logo-tagline">your flow, your pace</div>
+   <header>
+  <div class="logo">
+    <div class="logo-name"><span class="d-letter">D</span>riftask<span class="dot-accent"></span></div>
+    <div class="logo-tagline">your flow, your pace</div>
+  </div>
+
+  <div class="header-actions">
+    <div class="user-top-profile" style="display: flex; align-items: center; gap: 12px; background: var(--bg-glass); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--radius-md); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);">
+      <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2;">
+        <span style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3);">Utilizador</span>
+        <span id="top-username-display" style="font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--text-1);">Carregando...</span>
       </div>
-      <div class="header-actions">
-        <div class="layout-group" title="Modo de visualização">
-          <button class="layout-btn active" id="layout-board" title="Board" onclick="setLayout('board')">⊞</button>
-          <button class="layout-btn" id="layout-list" title="Lista" onclick="setLayout('list')">☰</button>
-          <button class="layout-btn" id="layout-compact" title="Compacto" onclick="setLayout('compact')">⊟</button>
-        </div>
-        <div class="icon-btn" id="stats-btn" title="Estatísticas (S)" onclick="toggleStats(this)"><span>📊</span></div>
-        <div class="icon-btn" id="theme-btn" title="Alternar tema (T)" onclick="toggleTheme(this)"><span id="theme-icon">🌙</span></div>
-        <div class="icon-btn" title="Atalhos de teclado (?)" onclick="openShortcuts()"><span>⌨</span></div>
-        <div class="icon-btn" title="Personalizar" onclick="openSidebar()"><span>⚙</span></div>
-      </div>
-    </header>
+      <button onclick="handleLogout()" class="card-btn delete" style="padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); margin: 0;">
+        Sair
+      </button>
+    </div>
+
+    <button class="icon-btn" onclick="toggleStats()" id="stats-toggle-btn"><span>📊</span></button>
+    <button class="icon-btn" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+    <button class="icon-btn" onclick="openModal('settings-modal')"><span>⚙️</span></button>
+  </div>
+</header>
 
     <div class="clock-bar">
       <div>
@@ -1166,7 +1171,56 @@
       // Caso contrário → prefixo do e-mail (parte antes do @)
       return { type: 'prefix', value: val };
     }
+    // Função para extrair o primeiro nome e atualizar a interface do topo
+function renderUserHeader() {
+  const loggedEmail = localStorage.getItem('DRIFTASK_USER_EMAIL');
+  const displayElement = document.getElementById('top-username-display');
+  
+  if (!loggedEmail) {
+    if (displayElement) displayElement.innerText = "Convidado";
+    return;
+  }
+  
+  // Extrai a parte antes do @, e depois pega apenas o primeiro nome antes do primeiro ponto (.)
+  let firstName = loggedEmail.split('@')[0].split('.')[0];
+  
+  // Capitaliza a primeira letra para melhor apresentação visual (ex: kauan.cubo -> Kauan)
+  let formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  
+  if (displayElement) {
+    displayElement.innerText = formattedName;
+  }
+}
 
+// Função global para desconectar da conta
+function handleLogout() {
+  // Limpa os dados de autenticação salvos no navegador
+  localStorage.removeItem('DRIFTASK_JWT_TOKEN');
+  localStorage.removeItem('DRIFTASK_USER_EMAIL');
+  
+  // Exibe um feedback visual rápido antes de recarregar
+  showToast('Sessão encerrada com sucesso.', 'success');
+  
+  // Força o recarregamento para que a tela de autenticação (auth-overlay) seja reexibida
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
+}
+
+// Garanta que esta chamada de renderização é executada na tua função init() existente
+function init() {
+  loadState(); // Tua lógica existente de carregar tarefas
+  applyTheme(); // Tua lógica existente de temas
+  
+  // Executa a atualização do painel do topo direito
+  renderUserHeader();
+}
+
+// Executado quando o documento HTML termina de carregar
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+});
+    
     /* ── Submit principal (Login ou Cadastro) ── */
     async function handleAuthSubmit() {
       hideAccessDenied();
