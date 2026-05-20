@@ -76,9 +76,25 @@ export default async function handler(req, res) {
     }
 
     if (action === 'login') {
+      // CAPTURA O IDENTIFICADOR (seja e-mail completo ou prefixo)
+      let targetEmail = email;
 
-      const cleanEmail = email.toLowerCase().trim();
+      // Se o usuário digitou apenas o prefixo no front-end
+      if (!targetEmail && req.body.emailPrefix) {
+        // Reconstrói o e-mail padrão usando o prefixo (ajuste o domínio se necessário)
+        targetEmail = `${req.body.emailPrefix}@gmail.com`; 
+      }
 
+      // Validação de segurança para garantir que temos uma string antes de tratar
+      if (!targetEmail) {
+        return res.status(400).json({
+          error: 'E-mail ou nome de usuário é obrigatório'
+        });
+      }
+
+      const cleanEmail = targetEmail.toLowerCase().trim();
+
+      // Busca o usuário no MongoDB Atlas pelo e-mail final
       const user = await usersCollection.findOne({
         email: cleanEmail
       });
@@ -111,10 +127,6 @@ export default async function handler(req, res) {
         email: user.email
       });
     }
-
-    return res.status(400).json({
-      error: 'Action inválida'
-    });
 
   } catch (error) {
 
