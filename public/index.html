@@ -1067,6 +1067,58 @@
 
     /* ─── PERSISTÊNCIA & CONEXÃO BACKEND ─── */
 
+    async function safeFetch(url, options = {}) {
+
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 8000);
+
+  try {
+
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+
+    let data = {};
+
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error('JSON inválido');
+    }
+
+    if (!response.ok) {
+
+      if (response.status === 401) {
+        throw new Error('SESSION_EXPIRED');
+      }
+
+      throw new Error(
+        data.error ||
+        `Erro HTTP ${response.status}`
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+
+    clearTimeout(timeout);
+
+    console.error('SAFE FETCH ERROR:', error);
+
+    if (error.name === 'AbortError') {
+      throw new Error('Servidor demorou para responder.');
+    }
+
+    throw error;
+  }
+}
     /* ── Helpers de erro inline ── */
     function showFieldError(fieldId, msg) {
       const input = document.getElementById(fieldId);
@@ -1345,60 +1397,138 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    async function loadTasksFromMongoDB() {
-      // NOTA BACKEND (Vercel + MongoDB):
-      // O endpoint /api/auth deve suportar o campo "emailPrefix" no login.
-      // Exemplo de query MongoDB para login por prefixo:
-      //   const user = await db.collection('users').findOne({
-      //     email: { $regex: `^${emailPrefix}@`, $options: 'i' }
-      //   });
-      if (!STATE.token) return;
-      try {
-        const res = await fetch('/api/tasks', {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${STATE.token}` }
-        });
-        if (res.status === 401) { logoutUser(); return; }
-        
-        const data = await res.json();
-        if (data && data.tasks) {
-          STATE.tasks = data.tasks;
-          renderAll();
-          updateStats();
-        }
+async function loadTasksFromMongoDB() {
+
+  if (!STATE.token) return;
+
+  try {
+
+    showToast('Sincronizando tarefas...', 'success');
+
+    const data = await safeFetch('/api/tasks', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${STATE.token}`
+      }
+    });
+
+    if (data && Array.isArray(data.tasks)) {
+
+      STATE.tasks = data.tasks;
+
+      renderAll();
+
+      updateStats();
+
+      console.log('Tasks carregadas:', data.tasks.length);
+
+    } else {
+
+      console.warn('Nenhuma task encontrada');
+
+      STATE.tasks = [];
+
+      renderAll();
+
+      updateStats();
+    }
+
+  } catch (err) {
+
+    console.error('LOAD TASKS ERROR:', err);
+
+    if (err.message === 'SESSION_EXPIRED') {
+
+      logoutUser();
+
+      showToast(
+        'Sessão expirada. Faça login novamente.',
+        'error'
+      );
+
+      return;
+    }
+
+    showToast(
+      err.message || 'Erro ao carregar tarefas.',
+      'error'
+    );
+
+    // MUITO IMPORTANTE:
+    // renderiza mesmo com erro
+    renderAll();
+
+    updateStats();
+  }
+}
       } catch (err) {
         showToast('Erro ao carregar dados do MongoDB.', 'error');
       }
     }
 
-    function saveState() {
-      // Salva apenas configurações visuais e cosméticas localmente
+function saveState() {
+
+  try {
+
+    localStorage.setItem(
+      'driftask_v6',
+      JSON.stringify({
+        theme: STATE.theme,
+        accent: STATE.accent,
+        fontSize: STATE.fontSize,
+        profile: STATE.profile,
+        layout: STATE.layout,
+        showStats: STATE.showStats,
+        colNames: STATE.colNames,
+        colColors: STATE.colColors
+      })
+    );
+
+  } catch(e) {
+    console.error(e);
+  }
+
+  // =========================
+  // SYNC MONGODB
+  // =========================
+
+  if (STATE.token) {
+
+    clearTimeout(debounceSyncTimeout);
+
+    debounceSyncTimeout = setTimeout(async () => {
+
       try {
-        localStorage.setItem('driftask_v6', JSON.stringify({
-          theme: STATE.theme, accent: STATE.accent, fontSize: STATE.fontSize,
-          profile: STATE.profile, layout: STATE.layout, showStats: STATE.showStats,
-          colNames: STATE.colNames, colColors: STATE.colColors
-        }));
-      } catch(e) {}
 
-      // Sincroniza as tarefas dinamicamente com o MongoDB (Debounce de 1.2 segundos)
-      if (STATE.token) {
-        clearTimeout(debounceSyncTimeout);
-        debounceSyncTimeout = setTimeout(async () => {
-          try {
-            await fetch('/api/tasks', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${STATE.token}`
-              },
-              body: JSON.stringify({ tasks: STATE.tasks })
-            });
-          } catch (e) { console.error("Falha na sincronização automatizada com MongoDB", e); }
-        }, 1200);
+        await safeFetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${STATE.token}`
+          },
+          body: JSON.stringify({
+            tasks: STATE.tasks
+          })
+        });
+
+        console.log('MongoDB sincronizado');
+
+      } catch (e) {
+
+        console.error(
+          'Falha sincronização MongoDB',
+          e
+        );
+
+        showToast(
+          'Falha ao sincronizar tarefas.',
+          'error'
+        );
       }
-    }
 
+    }, 1500);
+  }
+}
     async function loadState() {
       // Carrega layout e cosméticos salvos
       try {
@@ -1411,7 +1541,15 @@ document.addEventListener('DOMContentLoaded', () => {
           if (p.profile)   STATE.profile   = p.profile;
           if (p.layout)    STATE.layout    = p.layout;
           if (p.showStats !== undefined) STATE.showStats = p.showStats;
-          if (p.colNames)  STATE.colNames  = { ...STATE.colNames, ...p.colNames };
+          if (p.colNames)  STATE.colNames = {
+  ...STATE.colNames,
+  ...p.colNames
+};
+
+STATE.colColors = {
+  ...STATE.colColors,
+  ...p.colColors
+};
           if (p.colColors) STATE.colColors = { ...STATE.colColors, ...p.colColors };
         }
       } catch(e) {}
@@ -2254,20 +2392,58 @@ Exemplo: TAREFA: Revisar relatório mensal`;
     });
 
     /* ─── INIT ─── */
-    function init() {
-      loadState();
-      applyTheme();
-      applyAccentFromSaved();
-      applyFontSize();
-      applyColNames();
-      applyAllColColors();
-      applyProfile();
-      applyLayout();
-      applyStats();
-      updateClock();
-      renderAll();
-      updateStats();
+   async function init() {
+
+  try {
+
+    loadState();
+
+    applyTheme();
+
+    applyAccentFromSaved();
+
+    applyFontSize();
+
+    applyColNames();
+
+    applyAllColColors();
+
+    applyProfile();
+
+    applyLayout();
+
+    applyStats();
+
+    updateClock();
+
+    renderAll();
+
+    updateStats();
+
+    // =====================
+    // LOAD MONGODB
+    // =====================
+
+    if (STATE.token) {
+
+      await loadTasksFromMongoDB();
     }
+
+  } catch (error) {
+
+    console.error('INIT ERROR:', error);
+
+    showToast(
+      'Erro ao iniciar sistema.',
+      'error'
+    );
+
+    // renderiza mesmo assim
+    renderAll();
+
+    updateStats();
+  }
+}
     init();
   </script>
 </body>
