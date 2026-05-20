@@ -12,13 +12,13 @@ app.use(cors()); // Permite que o seu index.html acesse esta API
 // ==========================================
 // Cole aqui a sua chave gerada na Etapa 1 dentro das aspas
 const openai = new OpenAI({
-  apiKey: "COLE_AQUI_A_SUA_CHAVE_SK_DA_OPENAI", 
+  apiKey: "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", 
 });
 
 // ==========================================
 // 2. CONEXÃO COM O BANCO DE DADOS MONGO DB
 // ==========================================
-mongoose.connect('mongodb://localhost:27017/driftask_db')
+mongoose.connect('mongodb+srv://driftask_user:I9UdoO79FYymDeGJ@driftask.bugwepi.mongodb.net/?appName=DrifTask')
   .then(() => console.log('MongoDB e Rotas de IA inicializados com sucesso!'))
   .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
