@@ -1,110 +1,126 @@
-const { MongoClient } = require('mongodb');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import { MongoClient } from 'mongodb';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const uri = process.env.MONGODB_URI;
-const jwtSecret = process.env.JWT_SECRET || 'chave_fallback_segura_123';
-let cachedClient = null;
+const jwtSecret = process.env.JWT_SECRET || 'driftask_secret_super_key';
 
-async function connectToDatabase() {
-  if (cachedClient) return cachedClient.db('driftask_db');
-  const client = new MongoClient(uri);
-  await client.connect();
-  cachedClient = client;
-  return client.db('driftask_db');
+let client;
+let clientPromise;
+
+if (!uri) {
+  throw new Error('Por favor, define a variável de ambiente MONGODB_URI no painel da Vercel.');
 }
 
-module.exports = async (req, res) => {
-  // Configuração de CORS para permitir que o Front-end comunique com a API
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+if (process.env.NODE_ENV === 'development') {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  client = new MongoClient(uri);
+  clientPromise = client.connect();
+}
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
+export default async function handler(req, res) {
+  // Habilitar CORS se necessário
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido. Utilize POST.' });
+  }
 
   try {
-    const db = await connectToDatabase();
+    const mongoClient = await clientPromise;
+    const db = mongoClient.db('driftask_db');
     const usersCollection = db.collection('users');
-    const { action, email, emailPrefix, password } = req.body;
+
+    const { action, email, password } = req.body;
 
     // ====================================================================
-    // AÇÃO 1: CADASTRO (REGISTRO) - Aceita APENAS E-mail Completo
+    // AÇÃO 1: CADASTRO / REGISTO
     // ====================================================================
     if (action === 'register') {
       if (!email || !password) {
-        return res.status(400).json({ error: 'E-mail e senha são obrigatórios para cadastro.' });
+        return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
       }
 
       const cleanEmail = email.toLowerCase().trim();
       
-      // Verifica se o usuário já existe no MongoDB
-      const userExists = await usersCollection.findOne({ email: cleanEmail });
-      if (userExists) {
-        // Retorna status 409 (Conflict) para o frontend ativar a janela de erro
+      // Verifica se o utilizador já existe
+      const existingUser = await usersCollection.findOne({ email: cleanEmail });
+      if (existingUser) {
         return res.status(409).json({ error: 'Este e-mail já possui uma conta. Faça o login ou use outro endereço.' });
       }
 
-      // Criptografa a senha antes de salvar
+      // Encripta a senha antes de salvar
       const hashedPassword = await bcrypt.hash(password, 10);
-      await usersCollection.insertOne({ 
-        email: cleanEmail, 
-        password: hashedPassword, 
-        createdAt: new Date() 
-      });
+
+      const newUser = {
+        email: cleanEmail,
+        password: hashedPassword,
+        createdAt: new Date().toISOString()
+      };
+
+      await usersCollection.insertOne(newUser);
       
-      // Cria o documento vazio de tarefas para este novo usuário
-      await db.collection('user_tasks').insertOne({ email: cleanEmail, tasks: [] });
-      return res.status(201).json({ message: 'Usuário registrado com sucesso!' });
+      const token = jwt.sign({ email: cleanEmail }, jwtSecret, { expiresIn: '7d' });
+      return res.status(201).json({ token, email: cleanEmail, message: 'Conta criada com sucesso!' });
     }
 
     // ====================================================================
-    // AÇÃO 2: LOGIN - Aceita E-mail Completo OU apenas a primeira frase
+    // AÇÃO 2: LOGIN (Aceita e-mail completo, prefixo ou primeiro nome)
     // ====================================================================
     if (action === 'login') {
-      if (!password) {
-        return res.status(400).json({ error: 'A senha é obrigatória.' });
+      if (!email || !password) {
+        return res.status(400).json({ error: 'E-mail/Utilizador e senha são obrigatórios.' });
       }
 
+      const inputSearch = email.toLowerCase().trim();
       let user = null;
 
-      // Se o usuário digitou o e-mail completo (ex: joao@email.com)
-      if (email) {
-        user = await usersCollection.findOne({ email: email.toLowerCase().trim() });
-      } 
-      // Se o usuário digitou apenas o prefixo/primeira frase (ex: joao)
-      else if (emailPrefix) {
-        // Limpa a string para evitar injeção de caracteres especiais no banco
-        const cleanPrefix = emailPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').toLowerCase().trim();
-        
-        // Busca no MongoDB usando Regex (Expressão Regular) que comece com o prefixo seguido de "@"
-        user = await usersCollection.findOne({ 
-          email: { $regex: `^${cleanPrefix}@`, $options: 'i' } 
-        });
+      if (inputSearch.includes('@')) {
+        // Se digitou o e-mail completo
+        user = await usersCollection.findOne({ email: inputSearch });
       } else {
-        return res.status(400).json({ error: 'Informe um e-mail ou nome de usuário válido.' });
+        // Se digitou apenas o primeiro nome ou o prefixo antes do arroba.
+        // O Regex valida se começa com o termo digitado E se o próximo caractere é um ponto (.) ou arroba (@)
+        const cleanPrefix = inputSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        user = await usersCollection.findOne({ 
+          email: { $regex: `^${cleanPrefix}[\\.@ ]`, $options: 'i' } 
+        });
       }
 
-      // Se não encontrou o usuário, retorna 404 (Not Found)
       if (!user) {
-        return res.status(404).json({ error: 'Nenhuma conta encontrada. Você não tem acesso, favor verificar ou fazer cadastro.' });
+        return res.status(404).json({ error: 'Nenhuma conta encontrada. Verifique os dados ou faça o cadastro.' });
       }
 
-      // Verifica se a senha bate com a criptografia
+      // Valida a senha encriptada
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        // Retorna 401 (Unauthorized) para o frontend acionar a caixa vermelha
-        return res.status(401).json({ error: 'Senha incorreta. Você não tem acesso, favor verificar.' });
+        return res.status(401).json({ error: 'Senha incorreta. Acesso negado.' });
       }
 
-      // Gerar Token de Sessão válido por 7 dias
+      // Gera o token de acesso válido por 7 dias
       const token = jwt.sign({ email: user.email }, jwtSecret, { expiresIn: '7d' });
       return res.status(200).json({ token, email: user.email });
     }
 
-    return res.status(400).json({ error: 'Ação inválida.' });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Erro interno no servidor da Vercel' });
+    return res.status(400).json({ error: 'Ação inválida ou não informada.' });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno no servidor de autenticação.' });
   }
-};
+}
