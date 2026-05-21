@@ -322,98 +322,79 @@
     .user-chip-btn.open .user-chip-caret { transform: rotate(180deg); }
 
     /* ─── DROPDOWN DO USUÁRIO (logout) ─── */
-
-    /* O pai .user-chip precisa ser o âncora do absolute */
-    .user-chip { position: relative !important; }
-
     .user-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      left: auto;
-      z-index: 9999;
-      min-width: 230px;
+      /* posicionamento */
+      position: fixed;           /* fixed para sair de qualquer stacking context */
+      z-index: 9998;
+      min-width: 220px;
 
-      /* Fundo sólido — sem qualquer transparência */
-      background: #12101e;
-      isolation: isolate;
+      /* fundo TOTALMENTE sólido — sem herdar transparência do pai */
+      background: #1e1b30;       /* dark fallback explícito */
+      background: var(--bg-sidebar);
+      isolation: isolate;         /* cria novo stacking context */
 
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 14px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.06),
-        0 20px 48px rgba(0,0,0,0.85),
-        0 4px 12px rgba(0,0,0,0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.35);
       overflow: hidden;
 
+      /* animação de entrada/saída */
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-8px) scale(0.96);
+      transform: translateY(-6px) scale(0.97);
       transform-origin: top right;
-      transition: opacity 0.18s ease,
-                  transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
+      transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34,1.4,0.64,1);
     }
-    [data-theme="light"] .user-dropdown {
-      background: #f4f4f8;
-      border-color: rgba(0,0,0,0.14);
-      box-shadow: 0 20px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
-    }
+    [data-theme="light"] .user-dropdown { background: #ffffff; }
     .user-dropdown.open {
       opacity: 1;
       pointer-events: all;
       transform: translateY(0) scale(1);
     }
 
+    /* Posição calculada via JS (setDropdownPos) */
     .user-dropdown-header {
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-    }
-    [data-theme="light"] .user-dropdown-header {
-      border-bottom-color: rgba(0,0,0,0.08);
-      background: rgba(0,0,0,0.03);
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
     }
     .user-dropdown-email {
-      font-size: 13px; font-weight: 700; color: #ffffff;
+      font-size: 12px; font-weight: 700; color: var(--text-1);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    [data-theme="light"] .user-dropdown-email { color: #111; }
-    .user-dropdown-since { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; }
-    [data-theme="light"] .user-dropdown-since { color: rgba(0,0,0,0.4); }
+    .user-dropdown-since { font-size: 10px; color: var(--text-3); margin-top: 3px; }
 
     .user-dropdown-item {
       display: flex; align-items: center; gap: 10px;
       padding: 12px 16px; font-size: 13px; font-weight: 500;
-      color: rgba(255,255,255,0.75); cursor: pointer;
+      color: var(--text-2); cursor: pointer;
       border: none; width: 100%; text-align: left;
       background: transparent;
       transition: background 0.12s, color 0.12s;
       font-family: var(--font-body);
     }
-    [data-theme="light"] .user-dropdown-item { color: rgba(0,0,0,0.7); }
     .user-dropdown-item:hover {
-      background: rgba(255,255,255,0.09);
-      color: #ffffff;
+      background: rgba(255,255,255,0.07);
+      color: var(--text-1);
     }
-    [data-theme="light"] .user-dropdown-item:hover {
-      background: rgba(0,0,0,0.07);
-      color: #000;
-    }
+    [data-theme="light"] .user-dropdown-item:hover { background: rgba(0,0,0,0.06); }
 
-    /* Botão Sair */
-    .user-dropdown-item.danger { color: #f87171; font-weight: 600; }
+    /* Botão Sair — sempre visível, nunca transparente */
+    .user-dropdown-item.danger {
+      color: #f87171;
+      font-weight: 600;
+    }
     .user-dropdown-item.danger:hover {
-      background: rgba(239,68,68,0.2) !important;
-      color: #ff6b6b !important;
+      background: rgba(239,68,68,0.16) !important;
+      color: #ef4444 !important;
     }
 
     .user-dropdown-icon { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
     .user-dropdown-divider {
       height: 1px;
-      background: rgba(255,255,255,0.08);
+      background: var(--border);
       margin: 4px 0;
     }
-    [data-theme="light"] .user-dropdown-divider { background: rgba(0,0,0,0.08); }
 
     /* ─── ANIMAÇÕES DE PÁGINA ─── */
     @keyframes page-in { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
@@ -1531,15 +1512,33 @@
         </span>
       </div>
 
-      <!-- Status — somente leitura, sem campo de chave -->
+      <!-- Status do servidor -->
       <div id="ai-status-box" style="
         background:var(--bg-card); border:1px solid var(--border);
-        border-radius:var(--radius-md); padding:14px;
+        border-radius:var(--radius-md); padding:12px 14px;
         font-size:12px; line-height:1.7; color:var(--text-2);
       ">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span id="ai-status-icon" style="font-size:22px;flex-shrink:0;">⏳</span>
-          <div id="ai-status-msg" style="color:var(--text-3);">Verificando conexão...</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span id="ai-status-icon" style="font-size:18px;">⏳</span>
+          <div id="ai-status-msg" style="color:var(--text-3);">Verificando...</div>
+        </div>
+      </div>
+
+      <!-- Chave API própria (fallback quando servidor não tem ANTHROPIC_API_KEY) -->
+      <div style="margin-top:10px;">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+          color:var(--text-3);margin-bottom:5px;">
+          Sua chave API Anthropic (opcional)
+        </div>
+        <input id="user-api-key-input"
+          class="gist-input" type="password"
+          placeholder="sk-ant-api03-..."
+          autocomplete="new-password"
+          style="font-family:monospace;font-size:12px;"
+          oninput="saveUserApiKey(this.value)" />
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;line-height:1.5;">
+          Obtenha em <strong>console.anthropic.com</strong> → API Keys.<br>
+          Salva só no seu navegador. Usada se o servidor não tiver chave configurada.
         </div>
       </div>
 
@@ -1961,7 +1960,12 @@
       const isOpen = drop.classList.contains('open');
       if (isOpen) { closeUserDropdown(); return; }
 
-      // position:absolute já posiciona corretamente via CSS (top:100%, right:0)
+      // Calcula posição via getBoundingClientRect para position:fixed
+      const rect = btn.getBoundingClientRect();
+      drop.style.top   = (rect.bottom + 8) + 'px';
+      drop.style.right = (window.innerWidth - rect.right) + 'px';
+      drop.style.left  = 'auto';
+
       btn.classList.add('open');
       drop.classList.add('open');
       setTimeout(() => document.addEventListener('click', _closeUserChipOutside, { capture: true }), 50);
@@ -2667,7 +2671,7 @@
       document.getElementById('sidebar').classList.add('open');
       document.getElementById('sidebar-overlay').classList.add('open');
       buildAccentGrid(); buildColPresets();
-      setTimeout(checkAIStatus, 300);
+      setTimeout(() => { checkAIStatus(); loadUserApiKeyInput(); }, 300);
       // load saved key (masked)
       const key = getApiKey();
       if (key) document.getElementById('api-key-input').placeholder = 'sk-ant-...••••• (salva)';
@@ -2706,33 +2710,34 @@
       const icon = document.getElementById('ai-status-icon');
       const msg  = document.getElementById('ai-status-msg');
       if (!box) return;
-      icon.textContent = '⏳';
-      msg.innerHTML = '<span style="color:var(--text-3)">Verificando conexão...</span>';
+      loadUserApiKeyInput();
+      icon.textContent = '⏳'; msg.textContent = 'Verificando servidor...';
       box.style.borderColor = 'var(--border)';
       try {
         const res  = await fetch('/api/ai', {
-          method:  'POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ ping: true })
+          body: JSON.stringify({ ping: true })
         });
         const data = await res.json();
         if (data.ok) {
           icon.textContent = '✅';
-          msg.innerHTML = `
-            <strong style="color:#10b981">IA ativa</strong> · Claude Haiku<br>
-            <span style="font-size:10px;color:var(--text-3)">Assistente pronto para uso ✓</span>`;
+          msg.innerHTML = `<strong style="color:#10b981">Servidor ativo</strong> · Claude Haiku<br><span style="font-size:10px;color:var(--text-3)">ANTHROPIC_API_KEY configurada no Vercel ✓</span>`;
           box.style.borderColor = 'rgba(16,185,129,0.4)';
         } else {
-          throw new Error('sem chave');
+          throw new Error(data.error || 'sem chave');
         }
       } catch {
-        icon.textContent = '⚠️';
-        msg.innerHTML = `
-          <strong style="color:#f59e0b">IA não configurada</strong><br>
-          <span style="font-size:10px;color:var(--text-3)">
-            Contate o administrador para ativar o assistente.
-          </span>`;
-        box.style.borderColor = 'rgba(245,158,11,0.35)';
+        const hasLocalKey = getUserApiKey().startsWith('sk-ant-');
+        if (hasLocalKey) {
+          icon.textContent = '🔑';
+          msg.innerHTML = `<strong style="color:#a78bfa">Chave local ativa</strong><br><span style="font-size:10px;color:var(--text-3)">Usando sua chave API · Claude Haiku</span>`;
+          box.style.borderColor = 'rgba(167,139,250,0.4)';
+        } else {
+          icon.textContent = '⚠️';
+          msg.innerHTML = `<strong style="color:#f59e0b">Sem configuração</strong><br><span style="font-size:10px;color:var(--text-3)">Configure o servidor ou insira sua chave abaixo.</span>`;
+          box.style.borderColor = 'rgba(245,158,11,0.35)';
+        }
       }
     }
 
@@ -2800,8 +2805,11 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
     function getUserApiKey() { return localStorage.getItem('driftask_apikey') || ''; }
     function getApiKey()     { return getUserApiKey(); }
 
-    // Função mantida como stub (input removido da UI)
-    function loadUserApiKeyInput() {}
+    // Preenche o input da chave ao abrir sidebar
+    function loadUserApiKeyInput() {
+      const el = document.getElementById('user-api-key-input');
+      if (el) el.value = getUserApiKey();
+    }
 
     // ── Chamada direta ao Claude (quando o servidor não tem chave) ──
     async function _callAnthropicDirect(system, message, apiKey) {
@@ -2893,11 +2901,18 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       noKeyEl.className = 'ai-msg bot';
       noKeyEl.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <div>🤖 <strong>Assistente temporariamente indisponível</strong></div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">
-            O assistente Claude não está configurado neste momento.<br>
-            Entre em contato com o administrador do sistema para ativar esta função.
+          <div>🔑 <strong>IA não configurada ainda</strong></div>
+          <div style="font-size:12px;color:var(--text-2)">Para ativar o assistente Claude, escolha uma opção:</div>
+          <div style="font-size:12px;background:var(--bg-input);border-radius:8px;padding:10px;line-height:1.7;">
+            <strong>Opção A — Vercel (recomendado):</strong><br>
+            Dashboard → Settings → Env Vars → <code style="background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;">ANTHROPIC_API_KEY</code>
           </div>
+          <div style="font-size:12px;background:var(--bg-input);border-radius:8px;padding:10px;line-height:1.7;">
+            <strong>Opção B — Sua chave:</strong><br>
+            ⚙ Personalizar → "Sua chave API Anthropic"<br>
+            Obtenha em <strong>console.anthropic.com</strong>
+          </div>
+          <button class="ai-add-task-btn" onclick="openSidebar();closeAI()">⚙ Configurar agora</button>
         </div>`;
       msgs.appendChild(noKeyEl); msgs.scrollTop = msgs.scrollHeight;
     }
