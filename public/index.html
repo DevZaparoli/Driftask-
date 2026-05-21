@@ -327,24 +327,23 @@
     .user-chip { position: relative !important; }
 
     .user-dropdown {
-      /* absolute relativo ao .user-chip — NÃO é afetado por body.style.zoom */
       position: absolute;
       top: calc(100% + 10px);
       right: 0;
       left: auto;
       z-index: 9999;
-      min-width: 220px;
+      min-width: 230px;
 
-      /* fundo 100% opaco — cores hardcoded para garantir sem herança */
-      background: #1a1628 !important;
+      /* Fundo sólido — sem qualquer transparência */
+      background: #12101e;
       isolation: isolate;
 
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px;
       box-shadow:
-        0 0 0 1px rgba(255,255,255,0.05),
-        0 8px 32px rgba(0,0,0,0.7),
-        0 2px 8px rgba(0,0,0,0.5);
+        0 0 0 1px rgba(255,255,255,0.06),
+        0 20px 48px rgba(0,0,0,0.85),
+        0 4px 12px rgba(0,0,0,0.6);
       overflow: hidden;
 
       opacity: 0;
@@ -355,9 +354,9 @@
                   transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
     }
     [data-theme="light"] .user-dropdown {
-      background: #ffffff !important;
-      border-color: rgba(0,0,0,0.12);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.1);
+      background: #f4f4f8;
+      border-color: rgba(0,0,0,0.14);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
     }
     .user-dropdown.open {
       opacity: 1;
@@ -366,47 +365,55 @@
     }
 
     .user-dropdown-header {
-      padding: 14px 16px 10px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+    }
+    [data-theme="light"] .user-dropdown-header {
+      border-bottom-color: rgba(0,0,0,0.08);
+      background: rgba(0,0,0,0.03);
     }
     .user-dropdown-email {
-      font-size: 12px; font-weight: 700; color: var(--text-1);
+      font-size: 13px; font-weight: 700; color: #ffffff;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .user-dropdown-since { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+    [data-theme="light"] .user-dropdown-email { color: #111; }
+    .user-dropdown-since { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+    [data-theme="light"] .user-dropdown-since { color: rgba(0,0,0,0.4); }
 
     .user-dropdown-item {
       display: flex; align-items: center; gap: 10px;
       padding: 12px 16px; font-size: 13px; font-weight: 500;
-      color: var(--text-2); cursor: pointer;
+      color: rgba(255,255,255,0.75); cursor: pointer;
       border: none; width: 100%; text-align: left;
       background: transparent;
       transition: background 0.12s, color 0.12s;
       font-family: var(--font-body);
     }
+    [data-theme="light"] .user-dropdown-item { color: rgba(0,0,0,0.7); }
     .user-dropdown-item:hover {
-      background: rgba(255,255,255,0.07);
-      color: var(--text-1);
+      background: rgba(255,255,255,0.09);
+      color: #ffffff;
     }
-    [data-theme="light"] .user-dropdown-item:hover { background: rgba(0,0,0,0.06); }
+    [data-theme="light"] .user-dropdown-item:hover {
+      background: rgba(0,0,0,0.07);
+      color: #000;
+    }
 
-    /* Botão Sair — sempre visível, nunca transparente */
-    .user-dropdown-item.danger {
-      color: #f87171;
-      font-weight: 600;
-    }
+    /* Botão Sair */
+    .user-dropdown-item.danger { color: #f87171; font-weight: 600; }
     .user-dropdown-item.danger:hover {
-      background: rgba(239,68,68,0.16) !important;
-      color: #ef4444 !important;
+      background: rgba(239,68,68,0.2) !important;
+      color: #ff6b6b !important;
     }
 
     .user-dropdown-icon { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
     .user-dropdown-divider {
       height: 1px;
-      background: var(--border);
+      background: rgba(255,255,255,0.08);
       margin: 4px 0;
     }
+    [data-theme="light"] .user-dropdown-divider { background: rgba(0,0,0,0.08); }
 
     /* ─── ANIMAÇÕES DE PÁGINA ─── */
     @keyframes page-in { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
