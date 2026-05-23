@@ -30,7 +30,7 @@
       --grad-1: #1a0533;
       --grad-2: #0a1628;
       --grad-3: #0d0d1a;
-      --blur: blur(20px);
+      --blur: blur(8px);
       --shadow-card:  0 4px 24px rgba(0,0,0,0.3);
       --shadow-float: 0 8px 32px rgba(0,0,0,0.4);
       --font-display: 'Plus Jakarta Sans', sans-serif;
@@ -81,7 +81,7 @@
       position: absolute; border-radius: 50%;
       filter: blur(60px); opacity: 0.35; /* blur reduzido: 90→60, menos repaint na GPU */
       will-change: transform; /* isola em camada própria da GPU */
-      animation: drift 18s ease-in-out infinite alternate;
+      animation: drift 60s ease-in-out infinite alternate; /* slowed: menos carga GPU */
     }
     .bg-orb:nth-child(1) { width:600px; height:600px; background:var(--grad-1); top:-200px; left:-200px; animation-delay:0s; }
     .bg-orb:nth-child(2) { width:500px; height:500px; background:var(--grad-2); bottom:-150px; right:-150px; animation-delay:-6s; }
@@ -246,8 +246,63 @@
     .auth-back-link { font-size: 12px; color: var(--text-3); cursor: pointer; transition: color 0.15s; }
     .auth-back-link:hover { color: var(--accent); }
 
-    /* Abas da tela de auth */
-    .auth-tabs {
+    /* ── GRUPO: cor e layout próprios ─────────────────────────── */
+    :root { --group-accent: #10b981; --group-accent-soft: rgba(16,185,129,0.12); --group-accent-glow: rgba(16,185,129,0.3); }
+    /* Caixa de auth no modo grupo — borda e linha superiores verdes */
+    #auth-box:has(#auth-panel-group[style*="flex"]) { border-color: rgba(16,185,129,0.35); }
+    #auth-box:has(#auth-panel-group[style*="flex"])::before { background: var(--group-accent); }
+    #auth-box:has(#auth-panel-group[style*="flex"]) { max-width: 680px; } /* mais largo para o painel duplo */
+
+    .group-auth-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; background: var(--group-accent-soft);
+      border: 1px solid var(--group-accent-glow);
+      animation: auth-icon-in 0.4s cubic-bezier(0.34,1.5,0.64,1) both;
+    }
+    .group-tabs .auth-tab.active { background: var(--group-accent); box-shadow: 0 2px 8px var(--group-accent-glow); }
+    .group-input:focus { border-color: var(--group-accent) !important; box-shadow: 0 0 0 3px var(--group-accent-glow) !important; }
+    .group-submit-btn {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.35) !important;
+    }
+    .group-submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Divisor vertical */
+    .group-divider {
+      width: 1px; background: var(--border); align-self: stretch;
+      margin: 4px 0; flex-shrink: 0;
+    }
+
+    /* Lista de grupos existentes */
+    .group-list-panel {
+      width: 180px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .group-list-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--group-accent);
+      padding-bottom: 6px; border-bottom: 1px solid rgba(16,185,129,0.2);
+    }
+    .group-list-items { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+    .group-list-loading { font-size: 12px; color: var(--text-3); }
+    .group-list-empty { font-size: 12px; color: var(--text-3); font-style: italic; }
+    .group-list-item {
+      padding: 8px 10px; border-radius: var(--radius-md);
+      background: var(--group-accent-soft); border: 1px solid rgba(16,185,129,0.2);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .group-list-item:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
+    .group-list-item-name { font-size: 13px; font-weight: 700; color: var(--text-1); }
+    .group-list-item-count { font-size: 11px; color: var(--text-3); }
+
+    @media (max-width: 600px) {
+      #auth-panel-group { flex-direction: column !important; }
+      .group-divider { width: 100%; height: 1px; margin: 0; }
+      .group-list-panel { width: 100%; }
+      .group-list-items { flex-direction: row; flex-wrap: wrap; max-height: none; }
+    }
       display: flex; gap: 6px; background: var(--bg-btn);
       border: 1px solid var(--border); border-radius: var(--radius-md);
       padding: 4px;
@@ -309,11 +364,11 @@
     .logo-name .dot-accent { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-left: 2px; margin-bottom: 5px; vertical-align: bottom; }
     .logo-tagline { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-top: 3px; }
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-2); font-size: 16px; user-select: none; transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s; position: relative; }
+    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-2); font-size: 16px; user-select: none; transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s; position: relative; }
     .icon-btn:hover { background: var(--bg-glass-hover); border-color: var(--border-hover); color: var(--text-1); transform: translateY(-1px); }
     .icon-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
     .icon-btn .badge { position: absolute; top: -4px; right: -4px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .layout-group { display: flex; gap: 4px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; backdrop-filter: var(--blur); }
+    .layout-group { display: flex; gap: 4px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; }
     .layout-btn { width: 32px; height: 32px; border-radius: 10px; border: none; background: transparent; cursor: pointer; color: var(--text-2); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
     .layout-btn.active { background: var(--accent-soft); color: var(--accent); }
     .layout-btn:hover:not(.active) { background: var(--bg-glass-hover); color: var(--text-1); }
@@ -698,6 +753,9 @@
     .card-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
     .card-btn.delete:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.4); }
     .card-btn.edit-btn:hover { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+    .card-btn.transfer-btn { font-size: 10px; padding: 3px 6px; color: var(--text-3); }
+    .card-btn.transfer-btn:hover { background: rgba(var(--accent-rgb),0.15); color: var(--accent); border-color: rgba(var(--accent-rgb),0.4); }
+    .badge-grupo { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
     .card-btn[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; font-size: 10px; white-space: nowrap; padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 10; }
     .card-btn[data-tip]:hover::after { opacity: 1; }
     .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none; border: 1px solid transparent; transition: transform 0.15s, opacity 0.15s; }
@@ -1269,77 +1327,104 @@
       </div><!-- /auth-panel-account -->
 
       <!-- Painel: Grupo Compartilhado -->
-      <div id="auth-panel-group" style="display:none;flex-direction:column;gap:16px;">
-        <div class="auth-icon-wrap">
-          <div class="auth-icon">👥</div>
-          <div class="auth-title">Grupo Compartilhado</div>
-          <div class="auth-subtitle">Acesse ou crie um kanban colaborativo em tempo real</div>
+      <div id="auth-panel-group" style="display:none;flex-direction:row;gap:20px;align-items:flex-start;">
+
+        <!-- Lado esquerdo: formulário -->
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
+          <div class="auth-icon-wrap">
+            <div class="group-auth-icon">👥</div>
+            <div class="auth-title" style="color:var(--group-accent);">Grupo Compartilhado</div>
+            <div class="auth-subtitle">Kanban colaborativo em tempo real</div>
+          </div>
+
+          <!-- Sub-abas: Entrar / Criar -->
+          <div class="auth-tabs group-tabs">
+            <button class="auth-tab active" id="tab-group-join" onclick="switchGroupTab('join')">Entrar</button>
+            <button class="auth-tab" id="tab-group-create" onclick="switchGroupTab('create')">Criar</button>
+          </div>
+
+          <!-- Entrar no grupo -->
+          <div id="group-join-panel" style="display:flex;flex-direction:column;gap:10px;">
+            <div class="auth-field">
+              <div class="auth-field-label">Nome do Grupo</div>
+              <div class="auth-input-wrap">
+                <input type="text" id="group-join-name" class="auth-input group-input"
+                  placeholder="ex: equipe-dev"
+                  autocomplete="off"
+                  oninput="clearFieldError('group-join-name')"
+                  onkeydown="if(event.key==='Enter')handleGroupJoin()">
+              </div>
+              <div class="auth-field-error" id="group-join-name-error"></div>
+            </div>
+            <div class="auth-field">
+              <div class="auth-field-label">Senha do Grupo</div>
+              <div class="auth-input-wrap">
+                <input type="password" id="group-join-password" class="auth-input group-input"
+                  placeholder="••••••••"
+                  autocomplete="off"
+                  oninput="clearFieldError('group-join-password')"
+                  onkeydown="if(event.key==='Enter')handleGroupJoin()">
+                <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
+              </div>
+              <div class="auth-field-error" id="group-join-password-error"></div>
+            </div>
+            <button class="auth-submit-btn group-submit-btn" id="group-join-btn" onclick="handleGroupJoin()">Entrar no Grupo →</button>
+          </div>
+
+          <!-- Criar grupo -->
+          <div id="group-create-panel" style="display:none;flex-direction:column;gap:10px;">
+            <div class="auth-field">
+              <div class="auth-field-label">Nome do Grupo</div>
+              <div class="auth-input-wrap">
+                <input type="text" id="group-create-name" class="auth-input group-input"
+                  placeholder="ex: familia-souza"
+                  autocomplete="off"
+                  oninput="clearFieldError('group-create-name')"
+                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
+              </div>
+              <div class="auth-field-error" id="group-create-name-error"></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;">⚠ Nome não pode ser alterado depois</div>
+            </div>
+            <div class="auth-field">
+              <div class="auth-field-label">Senha do Grupo</div>
+              <div class="auth-input-wrap">
+                <input type="password" id="group-create-password" class="auth-input group-input"
+                  placeholder="mínimo 4 caracteres"
+                  autocomplete="new-password"
+                  oninput="clearFieldError('group-create-password')"
+                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
+                <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
+              </div>
+              <div class="auth-field-error" id="group-create-password-error"></div>
+            </div>
+            <!-- NOVO: confirmar senha -->
+            <div class="auth-field">
+              <div class="auth-field-label">Confirmar Senha</div>
+              <div class="auth-input-wrap">
+                <input type="password" id="group-create-confirm" class="auth-input group-input"
+                  placeholder="repita a senha"
+                  autocomplete="new-password"
+                  oninput="clearFieldError('group-create-confirm')"
+                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
+              </div>
+              <div class="auth-field-error" id="group-create-confirm-error"></div>
+            </div>
+            <button class="auth-submit-btn group-submit-btn" id="group-create-btn"
+              onclick="handleGroupCreate()">Criar Grupo ✦</button>
+          </div>
+        </div><!-- /lado esquerdo -->
+
+        <!-- Divisor vertical -->
+        <div class="group-divider"></div>
+
+        <!-- Lado direito: grupos existentes -->
+        <div class="group-list-panel">
+          <div class="group-list-title">Grupos existentes</div>
+          <div id="group-list-items" class="group-list-items">
+            <div class="group-list-loading">⏳ Carregando...</div>
+          </div>
         </div>
 
-        <!-- Sub-abas: Entrar / Criar -->
-        <div class="auth-tabs" style="margin-top:-4px;">
-          <button class="auth-tab active" id="tab-group-join" onclick="switchGroupTab('join')">Entrar no Grupo</button>
-          <button class="auth-tab" id="tab-group-create" onclick="switchGroupTab('create')">Criar Grupo</button>
-        </div>
-
-        <!-- Entrar no grupo -->
-        <div id="group-join-panel" style="display:flex;flex-direction:column;gap:12px;">
-          <div class="auth-field">
-            <div class="auth-field-label">Nome do Grupo</div>
-            <div class="auth-input-wrap">
-              <input type="text" id="group-join-name" class="auth-input"
-                placeholder="ex: equipe-dev, familia-souza"
-                autocomplete="off"
-                oninput="clearFieldError('group-join-name')"
-                onkeydown="if(event.key==='Enter')handleGroupJoin()">
-            </div>
-            <div class="auth-field-error" id="group-join-name-error"></div>
-          </div>
-          <div class="auth-field">
-            <div class="auth-field-label">Senha do Grupo</div>
-            <div class="auth-input-wrap">
-              <input type="password" id="group-join-password" class="auth-input"
-                placeholder="••••••••"
-                autocomplete="off"
-                oninput="clearFieldError('group-join-password')"
-                onkeydown="if(event.key==='Enter')handleGroupJoin()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()" title="Mostrar/ocultar senha">👁</button>
-            </div>
-            <div class="auth-field-error" id="group-join-password-error"></div>
-          </div>
-          <button class="auth-submit-btn" id="group-join-btn" onclick="handleGroupJoin()">Entrar no Grupo →</button>
-        </div>
-
-        <!-- Criar grupo -->
-        <div id="group-create-panel" style="display:none;flex-direction:column;gap:12px;">
-          <div class="auth-field">
-            <div class="auth-field-label">Nome do Grupo</div>
-            <div class="auth-input-wrap">
-              <input type="text" id="group-create-name" class="auth-input"
-                placeholder="ex: equipe-dev, familia-souza"
-                autocomplete="off"
-                oninput="clearFieldError('group-create-name')"
-                onkeydown="if(event.key==='Enter')handleGroupCreate()">
-            </div>
-            <div class="auth-field-error" id="group-create-name-error"></div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:3px;">⚠ O nome não pode ser alterado depois</div>
-          </div>
-          <div class="auth-field">
-            <div class="auth-field-label">Senha do Grupo</div>
-            <div class="auth-input-wrap">
-              <input type="password" id="group-create-password" class="auth-input"
-                placeholder="mínimo 4 caracteres"
-                autocomplete="new-password"
-                oninput="clearFieldError('group-create-password')"
-                onkeydown="if(event.key==='Enter')handleGroupCreate()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()" title="Mostrar/ocultar senha">👁</button>
-            </div>
-            <div class="auth-field-error" id="group-create-password-error"></div>
-          </div>
-          <button class="auth-submit-btn" id="group-create-btn"
-            style="background:linear-gradient(135deg,#10b981,#059669);"
-            onclick="handleGroupCreate()">Criar Grupo ✦</button>
-        </div>
       </div><!-- /auth-panel-group -->
 
     </div>
@@ -2613,13 +2698,30 @@
     }
 
     /* ─── CRIAR CARD ─── */
+    /* ─── CARD CACHE (diffing) ───────────────────────────────────────────
+       Guarda referência ao elemento DOM e um hash do conteúdo de cada card.
+       renderAll() reutiliza elementos existentes quando nada mudou,
+       evitando reconstruir o DOM inteiro a cada ação.
+    ─────────────────────────────────────────────────────────────────── */
+    const _cardCache = new Map(); // taskId → { el: HTMLElement, hash: string }
+
+    function _cardHash(task) {
+      return [task.text, task.notes, task.col, task.priority, task.starred,
+              task.due, task.profile, SEARCH_QUERY].join('|');
+    }
+
     function createCardEl(task) {
       const card = document.createElement('div');
       card.className = 'card'; card.dataset.id = task.id;
       card.draggable = true;
       card.addEventListener('dragstart', e => onDragStart(e, task.id));
       card.addEventListener('dragend', onDragEnd);
+      _fillCardEl(card, task);
+      return card;
+    }
 
+    function _fillCardEl(card, task) {
+      const isGroup = task.profile === 'grupo';
       let moveBtns = '';
       if (task.col === 'todo') {
         moveBtns = `<button class="card-btn" data-tip="Mover para Em Andamento" onclick="moveTask('${task.id}','doing')">→</button>`;
@@ -2629,13 +2731,21 @@
         moveBtns = `<button class="card-btn" data-tip="Reabrir" onclick="moveTask('${task.id}','doing')">↩</button>`;
       }
 
+      // Botão de transferência de perfil (apenas para tarefas pessoais/profissionais)
+      let transferBtn = '';
+      if (!isGroup) {
+        const targetProfile = task.profile === 'profissional' ? 'pessoal' : 'profissional';
+        const targetLabel   = task.profile === 'profissional' ? '→ Pess.' : '→ Prof.';
+        const targetTip     = task.profile === 'profissional' ? 'Enviar para Pessoal' : 'Enviar para Profissional';
+        transferBtn = `<button class="card-btn transfer-btn" data-tip="${targetTip}" onclick="transferTask('${task.id}','${targetProfile}')" title="${targetTip}">${targetLabel}</button>`;
+      }
+
       const pi = getPrioInfo(task.priority || 'medium');
-      const profileCls = task.profile === 'profissional' ? 'badge-profissional' : 'badge-pessoal';
-      const profileLabel = task.profile === 'profissional' ? 'Prof.' : 'Pess.';
+      const profileCls   = task.profile === 'profissional' ? 'badge-profissional' : task.profile === 'grupo' ? 'badge-grupo' : 'badge-pessoal';
+      const profileLabel = task.profile === 'profissional' ? 'Prof.' : task.profile === 'grupo' ? 'Grupo' : 'Pess.';
       const duePart = task.due ? (() => { const d = formatDue(task.due); return d ? `<span class="card-due ${d.cls}">${d.label}</span>` : ''; })() : '';
       const notesPart = task.notes ? `<div class="card-notes">${escapeHtml(task.notes)}</div>` : '';
 
-      // highlight search terms
       let textHtml = escapeHtml(task.text);
       if (SEARCH_QUERY) {
         const re = new RegExp(SEARCH_QUERY.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
@@ -2656,53 +2766,92 @@
           </div>
           <div class="card-actions">
             ${moveBtns}
+            ${transferBtn}
             <button class="card-btn edit-btn" data-tip="Editar" onclick="openEdit('${task.id}')">✏</button>
             <button class="card-btn delete" data-tip="Excluir" onclick="deleteTask('${task.id}')">✕</button>
           </div>
         </div>`;
-      return card;
     }
 
     /* ─── RENDERIZAÇÃO ─── */
     function renderAll() {
-      const cols = FILTER_COL ? [FILTER_COL] : ['todo','doing','done'];
+      const cols = ['todo','doing','done'];
       let totalVisible = 0;
 
-      ['todo','doing','done'].forEach(col => {
+      cols.forEach(col => {
         const area  = document.getElementById(`cards-${col}`);
         const empty = document.getElementById(`empty-${col}`);
         const count = document.getElementById(`count-${col}`);
         const alert = document.getElementById(`alert-${col}`);
         const pages = document.getElementById(`pages-${col}`);
 
-        const allTasks = STATE.tasks.filter(t => matchesFilters(t) && t.col === col);
+        const allTasks    = STATE.tasks.filter(t => matchesFilters(t) && t.col === col);
         const allColTasks = STATE.tasks.filter(t => t.col === col && t.profile === STATE.profile);
-        const total = allTasks.length;
-        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        STATE.pages[col] = Math.min(STATE.pages[col] || 1, totalPages);
-        const curPage = STATE.pages[col];
-        const start = (curPage - 1) * PAGE_SIZE;
-        const pageTasks = allTasks.slice(start, start + PAGE_SIZE);
+        const total       = allTasks.length;
+        const totalPages  = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        STATE.pages[col]  = Math.min(STATE.pages[col] || 1, totalPages);
+        const curPage     = STATE.pages[col];
+        const pageTasks   = allTasks.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
-        area.innerHTML = '';
         count.textContent = allColTasks.length;
         alert.classList.toggle('show', allColTasks.length > 20);
 
-        const isFiltered = FILTER_COL && FILTER_COL !== col;
+        // Oculta coluna se filtro de coluna estiver ativo e não for esta
         const colEl = document.getElementById(`col-${col}`);
-        if (colEl) colEl.style.display = isFiltered ? 'none' : '';
+        if (colEl) colEl.style.display = (FILTER_COL && FILTER_COL !== col) ? 'none' : '';
 
+        // ── Card Diffing ──────────────────────────────────────────────
+        // Em vez de limpar innerHTML, reutilizamos cards existentes.
+        // Só recriamos/atualizamos cards cujo conteúdo realmente mudou.
         if (total === 0 && (SEARCH_QUERY || FILTER_PRIO)) {
+          area.innerHTML = '';
           empty.style.display = 'none';
           const nr = document.createElement('div');
           nr.className = 'no-results'; nr.textContent = 'Nenhum resultado';
           area.appendChild(nr);
         } else {
           empty.style.display = total === 0 ? 'flex' : 'none';
-          pageTasks.forEach(task => area.appendChild(createCardEl(task)));
+
+          // IDs que devem aparecer neste render
+          const targetIds = pageTasks.map(t => t.id);
+
+          // Remove cards que não pertencem mais a esta página
+          [...area.children].forEach(child => {
+            if (child.dataset.id && !targetIds.includes(child.dataset.id)) {
+              _cardCache.delete(child.dataset.id);
+              child.remove();
+            }
+          });
+
+          // Itera na ordem correta, criando ou atualizando cada card
+          pageTasks.forEach((task, i) => {
+            const hash    = _cardHash(task);
+            const cached  = _cardCache.get(task.id);
+            let   cardEl;
+
+            if (cached) {
+              cardEl = cached.el;
+              // Só refaz innerHTML se o conteúdo mudou
+              if (cached.hash !== hash) {
+                _fillCardEl(cardEl, task);
+                cached.hash = hash;
+              }
+            } else {
+              cardEl = createCardEl(task);
+              _cardCache.set(task.id, { el: cardEl, hash });
+            }
+
+            // Garante ordem correta no DOM sem mover elementos que já estão no lugar
+            const existing = area.children[i];
+            if (existing !== cardEl) {
+              area.insertBefore(cardEl, existing || null);
+            }
+          });
         }
+
         totalVisible += total;
 
+        // ── Paginação ─────────────────────────────────────────────────
         pages.innerHTML = '';
         if (totalPages > 1) {
           const prev = document.createElement('button');
@@ -2779,6 +2928,19 @@
       saveState(); scheduleRender(); updateStats();
       bumpCounter(oldCol); bumpCounter(newCol);
       if (newCol === 'done') { launchConfetti(); showToast('Tarefa concluída! 🎉', 'success'); }
+    }
+
+    function transferTask(id, targetProfile) {
+      const task = STATE.tasks.find(t => t.id === id);
+      if (!task) return;
+      pushUndo('Tarefa transferida');
+      const fromLabel = task.profile === 'profissional' ? 'Profissional' : 'Pessoal';
+      const toLabel   = targetProfile === 'profissional' ? 'Profissional' : 'Pessoal';
+      task.profile = targetProfile;
+      // Limpa cache do card para forçar re-render
+      _cardCache.delete(id);
+      saveState(); scheduleRender(); updateStats();
+      showToast(`Tarefa enviada de ${fromLabel} → ${toLabel}`, 'success');
     }
 
     function deleteTask(id) {
@@ -3271,32 +3433,34 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
         const data = await res.json();
 
         if (res.ok && data.reply) {
-          // Adiciona resposta da IA no histórico
           aiHistory.push({ role: 'assistant', content: data.reply });
-          // Mantém histórico com no máximo 20 trocas (40 mensagens) para não estourar token
           if (aiHistory.length > 40) aiHistory = aiHistory.slice(-40);
           _renderAIReply(data.reply, msgs, loadEl);
           return;
         }
-        if (!data.fallback) throw new Error(data.error || 'Erro no servidor');
-      } catch (serverErr) {
-        // servidor falhou
-      }
 
-      // Sem API configurada → mensagem clara
-      aiHistory.pop(); // remove a pergunta do histórico se não houve resposta
-      loadEl.remove();
-      const noKeyEl = document.createElement('div');
-      noKeyEl.className = 'ai-msg bot';
-      noKeyEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div>🤖 <strong>Assistente temporariamente indisponível</strong></div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">
-            O assistente Claude não está configurado neste momento.<br>
-            Entre em contato com o administrador do sistema para ativar esta função.
-          </div>
+        // Erro com mensagem real do servidor — mostra para o usuário
+        const errText = data.error || `Erro ${res.status}`;
+        aiHistory.pop();
+        loadEl.remove();
+        const errEl = document.createElement('div');
+        errEl.className = 'ai-msg bot';
+        errEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;">
+          <div>⚠️ <strong>Erro ao contatar a IA</strong></div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">${escapeHtml(errText)}</div>
+          <div style="font-size:11px;color:var(--text-3);">Verifique se ANTHROPIC_API_KEY está configurada no painel da Vercel.</div>
         </div>`;
-      msgs.appendChild(noKeyEl); msgs.scrollTop = msgs.scrollHeight;
+        msgs.appendChild(errEl); msgs.scrollTop = msgs.scrollHeight;
+        return;
+
+      } catch (networkErr) {
+        aiHistory.pop();
+        loadEl.remove();
+        const netEl = document.createElement('div');
+        netEl.className = 'ai-msg bot';
+        netEl.innerHTML = `<div>🔌 <strong>Sem conexão</strong><br><span style="font-size:12px;color:var(--text-2);">Verifique sua internet e tente novamente.</span></div>`;
+        msgs.appendChild(netEl); msgs.scrollTop = msgs.scrollHeight;
+      }
     }
 
     function generateFallbackResponse(t, tasks, profile, col) { return _fallbackAI(t, tasks, profile, col); }
@@ -3462,8 +3626,9 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
 
     let GROUP_TOKEN     = localStorage.getItem('driftask_group_token') || null;
     let GROUP_NAME      = localStorage.getItem('driftask_group_name')  || null;
-    let GROUP_POLL_ID   = null;  // setInterval para sync em tempo real
-    const GROUP_POLL_MS = 5000; // sincroniza a cada 5 segundos
+    let GROUP_POLL_ID   = null;
+    const GROUP_POLL_MS = 3000; // sincroniza a cada 3 segundos (era 5s)
+    let GROUP_LAST_UPDATED = null; // timestamp do último update do servidor
 
     /* ── Abas auth: Conta ↔ Grupo ─────────────────────────────────── */
     function switchAuthTab(tab) {
@@ -3471,6 +3636,37 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       document.getElementById('tab-group').classList.toggle('active', tab === 'group');
       document.getElementById('auth-panel-account').style.display = tab === 'account' ? '' : 'none';
       document.getElementById('auth-panel-group').style.display   = tab === 'group'   ? 'flex' : 'none';
+      if (tab === 'group') loadGroupList(); // carrega lista ao abrir aba
+    }
+
+    /* ── Lista pública de grupos ──────────────────────────────────── */
+    async function loadGroupList() {
+      const el = document.getElementById('group-list-items');
+      if (!el) return;
+      el.innerHTML = '<div class="group-list-loading">⏳ Carregando...</div>';
+      try {
+        const res  = await fetch('/api/groups');
+        const data = await res.json();
+        if (!data.groups || data.groups.length === 0) {
+          el.innerHTML = '<div class="group-list-empty">Nenhum grupo criado ainda.</div>';
+          return;
+        }
+        el.innerHTML = '';
+        data.groups.forEach(g => {
+          const item = document.createElement('div');
+          item.className = 'group-list-item';
+          item.title = 'Clique para preencher o nome';
+          item.innerHTML = `<div class="group-list-item-name">👥 ${escapeHtml(g.name)}</div><div class="group-list-item-count">${g.taskCount} tarefa${g.taskCount !== 1 ? 's' : ''}</div>`;
+          item.onclick = () => {
+            document.getElementById('group-join-name').value = g.name;
+            switchGroupTab('join');
+            document.getElementById('group-join-password').focus();
+          };
+          el.appendChild(item);
+        });
+      } catch {
+        el.innerHTML = '<div class="group-list-empty">Erro ao carregar grupos.</div>';
+      }
     }
 
     /* ── Sub-abas do grupo: Entrar ↔ Criar ───────────────────────── */
@@ -3500,62 +3696,43 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       const name     = document.getElementById('group-join-name').value.trim();
       const password = document.getElementById('group-join-password').value;
       let valid = true;
-      if (!name || name.length < 3) {
-        showFieldError('group-join-name', '⚠ Informe o nome do grupo (mín. 3 caracteres).');
-        valid = false;
-      }
-      if (!password) {
-        showFieldError('group-join-password', '⚠ Informe a senha do grupo.');
-        valid = false;
-      }
+      if (!name || name.length < 3) { showFieldError('group-join-name', '⚠ Informe o nome do grupo (mín. 3 caracteres).'); valid = false; }
+      if (!password) { showFieldError('group-join-password', '⚠ Informe a senha do grupo.'); valid = false; }
       if (!valid) return;
 
       const btn = document.getElementById('group-join-btn');
       btn.disabled = true; btn.textContent = 'Entrando...';
       try {
-        const res  = await fetch('/api/groups', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'join', name, password })
-        });
+        const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', name, password }) });
         const data = await res.json();
         if (!res.ok) { showFieldError('group-join-name', '⚠ ' + (data.error || 'Erro.')); return; }
         enterGroupMode(data.token, data.groupName);
-      } catch (e) {
-        showFieldError('group-join-name', '⚠ Erro de conexão. Tente novamente.');
-      } finally {
-        btn.disabled = false; btn.textContent = 'Entrar no Grupo →';
-      }
+      } catch { showFieldError('group-join-name', '⚠ Erro de conexão. Tente novamente.'); }
+      finally { btn.disabled = false; btn.textContent = 'Entrar no Grupo →'; }
     }
 
-    /* ── Criar um grupo ──────────────────────────────────────────── */
+    /* ── Criar um grupo (com confirmação de senha) ────────────────── */
     async function handleGroupCreate() {
       const name     = document.getElementById('group-create-name').value.trim();
       const password = document.getElementById('group-create-password').value;
+      const confirm  = document.getElementById('group-create-confirm').value;
       let valid = true;
-      if (!name || name.length < 3) {
-        showFieldError('group-create-name', '⚠ Nome deve ter pelo menos 3 caracteres.'); valid = false;
-      }
-      if (!password || password.length < 4) {
-        showFieldError('group-create-password', '⚠ Senha deve ter pelo menos 4 caracteres.'); valid = false;
-      }
+      if (!name || name.length < 3)    { showFieldError('group-create-name',    '⚠ Nome deve ter pelo menos 3 caracteres.'); valid = false; }
+      if (!password || password.length < 4) { showFieldError('group-create-password', '⚠ Senha deve ter pelo menos 4 caracteres.'); valid = false; }
+      if (password !== confirm)        { showFieldError('group-create-confirm', '⚠ As senhas não coincidem.'); valid = false; }
       if (!valid) return;
 
       const btn = document.getElementById('group-create-btn');
       btn.disabled = true; btn.textContent = 'Criando...';
       try {
-        const res  = await fetch('/api/groups', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create', name, password })
-        });
+        const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', name, password }) });
         const data = await res.json();
         if (!res.ok) { showFieldError('group-create-name', '⚠ ' + (data.error || 'Erro.')); return; }
         showToast(`Grupo "${data.groupName}" criado! ✦`, 'success');
+        loadGroupList(); // atualiza lista
         enterGroupMode(data.token, data.groupName);
-      } catch (e) {
-        showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.');
-      } finally {
-        btn.disabled = false; btn.textContent = 'Criar Grupo ✦';
-      }
+      } catch { showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.'); }
+      finally { btn.disabled = false; btn.textContent = 'Criar Grupo ✦'; }
     }
 
     /* ── Ativa modo grupo ────────────────────────────────────────── */
@@ -3583,36 +3760,42 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
     }
 
     /* ── Carrega tarefas do grupo do servidor ────────────────────── */
+    /* ── Hash leve do array de tarefas (detecta mudanças sem timestamps) ── */
+    function _hashTasks(tasks) {
+      return (tasks || []).map(t => t.id + '|' + t.col + '|' + (t.text||'').slice(0,20) + '|' + (t.priority||'')).join(',');
+    }
+
     async function loadGroupTasks() {
       try {
-        const res  = await fetch('/api/groups', {
-          headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN }
-        });
+        const res  = await fetch('/api/groups', { headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN } });
         if (res.status === 401) { leaveGroup(); return; }
         const data = await res.json();
         if (data && Array.isArray(data.tasks)) {
-          STATE.tasks   = data.tasks;
-          STATE.profile = 'grupo'; // perfil especial — isola das tarefas pessoais
-          tasksLoaded   = true;
-          scheduleRender();
-          updateStats();
+          STATE.tasks        = data.tasks;
+          STATE.profile      = 'grupo';
+          tasksLoaded        = true;
+          GROUP_LAST_UPDATED = _hashTasks(data.tasks); // guarda hash, não timestamp
+          scheduleRender(); updateStats();
         }
-      } catch (e) { /* sem conexão, mantém estado atual */ }
+      } catch { /* sem conexão */ }
     }
 
     /* ── Salva tarefas do grupo no servidor ──────────────────────── */
     async function saveGroupTasks() {
       if (!GROUP_TOKEN) return;
+      const groupTasks = STATE.tasks.filter(t => t.profile === 'grupo');
       try {
         await fetch('/api/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROUP_TOKEN },
-          body: JSON.stringify({ action: 'save', tasks: STATE.tasks.filter(t => t.profile === 'grupo') })
+          body: JSON.stringify({ action: 'save', tasks: groupTasks })
         });
-      } catch (e) { /* silencioso */ }
+        // Atualiza hash local — próximo poll ignora este save como "mudança externa"
+        GROUP_LAST_UPDATED = _hashTasks(groupTasks);
+      } catch { /* silencioso */ }
     }
 
-    /* ── Polling: sincroniza com outros usuários do grupo ────────── */
+    /* ── Polling a cada 3s: detecta mudanças de outros membros ──── */
     function startGroupPolling() {
       stopGroupPolling();
       GROUP_POLL_ID = setInterval(async () => {
@@ -3621,21 +3804,21 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
           const res  = await fetch('/api/groups', { headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN } });
           if (res.status === 401) { leaveGroup(); return; }
           const data = await res.json();
-          if (data && Array.isArray(data.tasks)) {
-            // Só re-renderiza se houve mudança real
-            const newSer = JSON.stringify(data.tasks);
-            const curSer = JSON.stringify(STATE.tasks.filter(t => t.profile === 'grupo'));
-            if (newSer !== curSer) {
-              STATE.tasks = [
-                ...STATE.tasks.filter(t => t.profile !== 'grupo'), // mantém tarefas pessoais
-                ...data.tasks
-              ];
-              scheduleRender();
-              updateStats();
-              showToast('Grupo atualizado ✦', 'success');
-            }
+          if (!data || !Array.isArray(data.tasks)) return;
+
+          const serverHash = _hashTasks(data.tasks);
+          if (serverHash !== GROUP_LAST_UPDATED) {
+            GROUP_LAST_UPDATED = serverHash;
+            // Invalida cache de cards do grupo para re-render correto
+            data.tasks.forEach(t => _cardCache.delete(t.id));
+            STATE.tasks = [
+              ...STATE.tasks.filter(t => t.profile !== 'grupo'),
+              ...data.tasks
+            ];
+            scheduleRender(); updateStats();
+            showToast('Grupo atualizado ✦', 'success');
           }
-        } catch (e) { /* sem conexão */ }
+        } catch { /* sem conexão */ }
       }, GROUP_POLL_MS);
     }
 
