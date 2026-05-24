@@ -1187,7 +1187,14 @@
       box-shadow: 0 0 0 2px var(--accent);
     }
 
-    /* ─── MODAL TOKEN DE ADMINISTRADOR DO GRUPO ─── */
+    /* ─── OVERLAY DEDICADO: TOKEN DE ADMINISTRADOR ─── */
+    .admin-token-overlay {
+      position: fixed; inset: 0; z-index: 10001; /* acima de tudo */
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .admin-token-overlay.open { display: flex; opacity: 1; }
     .admin-token-box {
       background: var(--bg-sidebar); border: 1px solid rgba(16,185,129,0.35);
       border-radius: var(--radius-lg); padding: 28px 24px; width: 100%; max-width: 420px;
@@ -1863,19 +1870,6 @@
     <!-- Wrapper: apenas este div é centralizado pelo overlay -->
     <div id="modal-wrapper" style="width:100%;max-width:440px;padding:20px;box-sizing:border-box;">
 
-    <!-- ═══ MODAL: TOKEN DE ADMINISTRADOR ═══ -->
-    <div class="admin-token-box" id="modal-admin-token" style="display:none;flex-direction:column;gap:14px;">
-      <div style="text-align:center;font-size:32px;">🔑</div>
-      <div class="admin-token-title">Token de Administrador do Grupo</div>
-      <div class="admin-token-warning">
-        ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele para excluir o grupo no futuro.
-      </div>
-      <div class="admin-token-value" id="admin-token-display" onclick="selectAdminToken()"></div>
-      <button class="admin-token-copy" onclick="copyAdminToken()">📋 Copiar Token</button>
-      <div style="font-size:11px;color:var(--text-3);text-align:center;">Clique no token para selecionar · Após copiar, feche esta janela</div>
-      <button class="confirm-cancel" onclick="closeAdminTokenModal()">Entendi, já copiei ✓</button>
-    </div>
-
     <!-- ═══ MODAL: EXCLUIR GRUPO ═══ -->
     <div class="delete-group-box" id="modal-delete-group" style="display:none;flex-direction:column;gap:14px;">
       <div style="text-align:center;font-size:28px;">🗑</div>
@@ -1945,6 +1939,28 @@
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Overlay dedicado para o Token de Admin — z-index 10001, acima de tudo -->
+  <div class="admin-token-overlay" id="admin-token-overlay">
+    <div class="admin-token-box" style="flex-direction:column;gap:14px;max-width:420px;width:100%;">
+      <div style="text-align:center;font-size:36px;">🔑</div>
+      <div class="admin-token-title">Token de Administrador</div>
+      <div style="text-align:center;font-size:13px;color:var(--text-2);">
+        Grupo: <strong id="admin-token-group-name"></strong>
+      </div>
+      <div class="admin-token-warning">
+        ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele caso queira excluir o grupo no futuro.
+      </div>
+      <div class="admin-token-value" id="admin-token-display" onclick="selectAdminToken()"></div>
+      <button class="admin-token-copy" onclick="copyAdminToken()">📋 Copiar Token</button>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;">
+        Clique no token para selecionar todo o texto
+      </div>
+      <button class="confirm-cancel" style="margin-top:4px;" onclick="closeAdminTokenModal()">
+        ✓ Entendi, já salvei meu token
+      </button>
+    </div>
+  </div>
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -3302,19 +3318,18 @@
     }
     /* ── Helpers: abre um único modal no overlay ── */
     function _openModal(id) {
-      ['modal-admin-token','modal-delete-group','modal-delete-account','modal-confirm-clear']
+      ['modal-delete-group','modal-delete-account','modal-confirm-clear']
         .forEach(m => {
           const el = document.getElementById(m);
           if (el) el.style.display = m === id ? 'flex' : 'none';
         });
       document.getElementById('confirm-overlay').classList.add('open');
-      // Garante scroll para o topo do modal em telas pequenas
       const wrapper = document.getElementById('modal-wrapper');
       if (wrapper) wrapper.scrollTop = 0;
     }
     function _closeAllModals() {
       document.getElementById('confirm-overlay').classList.remove('open');
-      ['modal-admin-token','modal-delete-group','modal-delete-account','modal-confirm-clear']
+      ['modal-delete-group','modal-delete-account','modal-confirm-clear']
         .forEach(m => { const el = document.getElementById(m); if (el) el.style.display = 'none'; });
     }
     function confirmClear() {
@@ -3333,12 +3348,18 @@
       _closeAllModals();
     }
 
-    /* ── Token de admin: exibição após criar grupo ── */
+    /* ── Token de admin: overlay dedicado (z-index 10001) ── */
     let _pendingAdminToken = null;
     function showAdminTokenModal(token, groupName) {
       _pendingAdminToken = token;
       document.getElementById('admin-token-display').textContent = token;
-      _openModal('modal-admin-token');
+      const nameEl = document.getElementById('admin-token-group-name');
+      if (nameEl) nameEl.textContent = groupName || '';
+      const overlay = document.getElementById('admin-token-overlay');
+      overlay.style.display = 'flex';
+      // Force reflow para a transição de opacity funcionar
+      overlay.offsetHeight;
+      overlay.classList.add('open');
     }
     function copyAdminToken() {
       if (!_pendingAdminToken) return;
@@ -3355,7 +3376,12 @@
       window.getSelection().removeAllRanges();
       window.getSelection().addRange(range);
     }
-    function closeAdminTokenModal() { _pendingAdminToken = null; _closeAllModals(); }
+    function closeAdminTokenModal() {
+      _pendingAdminToken = null;
+      const overlay = document.getElementById('admin-token-overlay');
+      overlay.classList.remove('open');
+      setTimeout(() => { overlay.style.display = 'none'; }, 250);
+    }
 
     /* ── Excluir Grupo ── */
     function openDeleteGroupModal() {
@@ -4092,12 +4118,9 @@ Para sugerir novas tarefas ao kanban, inicie a linha com "TAREFA:" e o usuário 
         const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', name, password }) });
         const data = await res.json();
         if (!res.ok) { showFieldError('group-create-name', '⚠ ' + (data.error || 'Erro.')); return; }
-        // Entra no grupo e depois exibe o modal com o adminToken
         enterGroupMode(data.token, data.groupName);
         loadGroupList();
-        if (data.adminToken) {
-          setTimeout(() => showAdminTokenModal(data.adminToken, data.groupName), 400);
-        }
+        if (data.adminToken) showAdminTokenModal(data.adminToken, data.groupName);
       } catch { showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.'); }
       finally { btn.disabled = false; btn.textContent = 'Criar Grupo ✦'; }
     }
