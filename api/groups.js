@@ -1,13 +1,15 @@
 // api/groups.js
-// GET  (sem auth)                   → lista grupos públicos (nome + nº de tarefas)
-// POST { action:'create' }          → cria grupo
-// POST { action:'join' }            → entra no grupo → retorna groupToken
-// GET  (Authorization: groupToken)  → tarefas do grupo
-// POST { action:'save' }            → salva tarefas (requer groupToken)
+// GET  (sem auth)                    → lista grupos públicos
+// GET  (Bearer groupToken)           → tarefas do grupo
+// POST { action:'create' }           → cria grupo → retorna groupToken + adminToken
+// POST { action:'join' }             → entra no grupo → retorna groupToken
+// POST { action:'save' }             → salva tarefas (requer groupToken)
+// POST { action:'delete' }           → apaga grupo (requer name + adminToken)
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import bcrypt from 'bcryptjs';
 import jwt    from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const JWT_SECRET  = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
@@ -62,7 +64,6 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const auth = req.headers['authorization'] || '';
 
-    // Com token → retorna tarefas do grupo específico
     if (auth.startsWith('Bearer ')) {
       let decoded;
       try { decoded = verifyGroupToken(req); }
@@ -74,16 +75,13 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true, tasks: doc.tasks || [], groupName: doc.name, updatedAt: doc.updatedAt });
     }
 
-    // Sem token → lista pública de grupos (nome + contagem de tarefas)
+    // Lista pública
     const list = await groups.find({}, { projection: { name: 1, tasks: 1, createdAt: 1 } })
       .sort({ createdAt: -1 }).limit(20).toArray();
 
     return json(res, 200, {
       ok: true,
-      groups: list.map(g => ({
-        name:      g.name,
-        taskCount: (g.tasks || []).length,
-      }))
+      groups: list.map(g => ({ name: g.name, taskCount: (g.tasks || []).length }))
     });
   }
 
@@ -100,10 +98,34 @@ export default async function handler(req, res) {
     const normalName = name.trim().toLowerCase();
     if (await groups.findOne({ normalName })) return json(res, 409, { error: 'Já existe um grupo com este nome.' });
 
-    const hash   = await bcrypt.hash(password, SALT_ROUNDS);
-    const result = await groups.insertOne({ name: name.trim(), normalName, password: hash, tasks: [], createdAt: new Date(), updatedAt: new Date() });
-    const token  = jwt.sign({ groupId: result.insertedId.toString(), groupName: name.trim() }, JWT_SECRET, { expiresIn: '30d' });
-    return json(res, 201, { ok: true, token, groupName: name.trim() });
+    // Gera adminToken: string hex aleatória de 32 bytes (64 caracteres)
+    // É diferente do groupToken de sessão — serve exclusivamente para deletar o grupo
+    const adminTokenPlain = crypto.randomBytes(32).toString('hex');
+    const adminTokenHash  = await bcrypt.hash(adminTokenPlain, SALT_ROUNDS);
+
+    const pwHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const result = await groups.insertOne({
+      name:           name.trim(),
+      normalName,
+      password:       pwHash,
+      adminTokenHash,          // armazenado como hash — nunca o valor real
+      tasks:          [],
+      createdAt:      new Date(),
+      updatedAt:      new Date(),
+    });
+
+    const groupToken = jwt.sign(
+      { groupId: result.insertedId.toString(), groupName: name.trim() },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    return json(res, 201, {
+      ok:         true,
+      token:      groupToken,
+      adminToken: adminTokenPlain, // enviado UMA única vez — não é armazenado em plaintext
+      groupName:  name.trim(),
+    });
   }
 
   // ── JOIN ─────────────────────────────────────────────────────────────────
@@ -117,7 +139,11 @@ export default async function handler(req, res) {
     const valid = await bcrypt.compare(password, doc.password);
     if (!valid) return json(res, 401, { error: 'Senha incorreta.' });
 
-    const token = jwt.sign({ groupId: doc._id.toString(), groupName: doc.name }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign(
+      { groupId: doc._id.toString(), groupName: doc.name },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
     return json(res, 200, { ok: true, token, groupName: doc.name });
   }
 
@@ -136,6 +162,27 @@ export default async function handler(req, res) {
       { $set: { tasks: safeTasks(tasks), updatedAt: new Date() } }
     );
     return json(res, 200, { ok: true, saved: tasks.length });
+  }
+
+  // ── DELETE ───────────────────────────────────────────────────────────────
+  if (action === 'delete') {
+    const { name, adminToken } = req.body;
+    if (!name || !adminToken) {
+      return json(res, 400, { error: 'Nome do grupo e token de administrador são obrigatórios.' });
+    }
+
+    const doc = await groups.findOne({ normalName: name.trim().toLowerCase() });
+    if (!doc) return json(res, 404, { error: 'Grupo não encontrado.' });
+
+    if (!doc.adminTokenHash) {
+      return json(res, 403, { error: 'Este grupo não possui token de administrador. Foi criado antes desta funcionalidade.' });
+    }
+
+    const valid = await bcrypt.compare(adminToken.trim(), doc.adminTokenHash);
+    if (!valid) return json(res, 401, { error: 'Token de administrador inválido.' });
+
+    await groups.deleteOne({ _id: doc._id });
+    return json(res, 200, { ok: true, message: `Grupo "${doc.name}" foi excluído permanentemente.` });
   }
 
   return json(res, 400, { error: `Ação desconhecida: "${action}".` });
