@@ -1659,10 +1659,6 @@
         <div class="ai-popup-title">
           <span style="color:var(--accent)">✦</span>
           Assistente IA
-          <span class="ai-status-badge" id="ai-status-badge">
-            <span class="ai-status-dot" id="ai-status-dot"></span>
-            <span id="ai-status-label">verificando...</span>
-          </span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="ai-powered-by">Groq · LLaMA</div>
@@ -3371,16 +3367,11 @@
     ══════════════════════════════════════════════════════════ */
 
     async function checkAIStatus() {
-      const box   = document.getElementById('ai-status-box');
-      const icon  = document.getElementById('ai-status-icon');
-      const msg   = document.getElementById('ai-status-msg');
-      const label = document.getElementById('ai-status-label');
-      const dot   = document.getElementById('ai-status-dot');
+      const box  = document.getElementById('ai-status-box');
+      const icon = document.getElementById('ai-status-icon');
+      const msg  = document.getElementById('ai-status-msg');
       if (!box) return;
 
-      // Estado: verificando
-      if (label) label.textContent = 'verificando...';
-      if (dot)   dot.style.background = '#f59e0b';
       icon.textContent = '⏳';
       msg.innerHTML = '<span style="color:var(--text-3)">Verificando conexão...</span>';
       box.style.borderColor = 'var(--border)';
@@ -3393,9 +3384,6 @@
         });
         const data = await res.json();
         if (data.ok) {
-          // Estado: ativa
-          if (label) label.textContent = 'ativa';
-          if (dot)   dot.style.background = '#10b981';
           icon.textContent = '✅';
           msg.innerHTML = `
             <strong style="color:#10b981">IA ativa</strong> · LLaMA 3.3 70B<br>
@@ -3405,9 +3393,6 @@
           throw new Error(data.error || 'sem chave');
         }
       } catch(e) {
-        // Estado: erro
-        if (label) label.textContent = 'offline';
-        if (dot)   dot.style.background = '#ef4444';
         icon.textContent = '⚠️';
         msg.innerHTML = `
           <strong style="color:#f59e0b">IA não configurada</strong><br>
