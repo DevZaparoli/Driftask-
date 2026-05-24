@@ -30,7 +30,7 @@
       --grad-1: #1a0533;
       --grad-2: #0a1628;
       --grad-3: #0d0d1a;
-      --blur: blur(20px);
+      --blur: blur(8px);
       --shadow-card:  0 4px 24px rgba(0,0,0,0.3);
       --shadow-float: 0 8px 32px rgba(0,0,0,0.4);
       --font-display: 'Plus Jakarta Sans', sans-serif;
@@ -76,11 +76,12 @@
       overflow-x: hidden;
       transition: background-color 0.4s ease, color 0.4s ease;
     }
-    .bg-mesh { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .bg-mesh { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; contain: strict; }
     .bg-orb {
       position: absolute; border-radius: 50%;
-      filter: blur(90px); opacity: 0.45;
-      animation: drift 18s ease-in-out infinite alternate;
+      filter: blur(60px); opacity: 0.35; /* blur reduzido: 90→60, menos repaint na GPU */
+      will-change: transform; /* isola em camada própria da GPU */
+      animation: drift 60s ease-in-out infinite alternate; /* slowed: menos carga GPU */
     }
     .bg-orb:nth-child(1) { width:600px; height:600px; background:var(--grad-1); top:-200px; left:-200px; animation-delay:0s; }
     .bg-orb:nth-child(2) { width:500px; height:500px; background:var(--grad-2); bottom:-150px; right:-150px; animation-delay:-6s; }
@@ -245,6 +246,141 @@
     .auth-back-link { font-size: 12px; color: var(--text-3); cursor: pointer; transition: color 0.15s; }
     .auth-back-link:hover { color: var(--accent); }
 
+    /* ── GRUPO: cor e layout próprios ─────────────────────────── */
+    :root { --group-accent: #10b981; --group-accent-soft: rgba(16,185,129,0.12); --group-accent-glow: rgba(16,185,129,0.3); }
+    /* Linha superior verde quando em modo grupo */
+    #auth-box:has(#auth-panel-group[style*="flex"])::before { background: var(--group-accent); }
+
+    .group-auth-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; background: var(--group-accent-soft);
+      border: 1px solid var(--group-accent-glow);
+      animation: auth-icon-in 0.4s cubic-bezier(0.34,1.5,0.64,1) both;
+    }
+    .group-tabs .auth-tab.active { background: var(--group-accent); box-shadow: 0 2px 8px var(--group-accent-glow); }
+    .group-input:focus { border-color: var(--group-accent) !important; box-shadow: 0 0 0 3px var(--group-accent-glow) !important; }
+    .group-submit-btn {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.35) !important;
+    }
+    .group-submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Divisor vertical */
+    .group-divider {
+      width: 1px; background: var(--border); align-self: stretch;
+      margin: 4px 0; flex-shrink: 0;
+    }
+
+    /* Lista de grupos existentes */
+    .group-list-panel {
+      width: 180px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .group-list-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--group-accent);
+      padding-bottom: 6px; border-bottom: 1px solid rgba(16,185,129,0.2);
+    }
+    .group-list-items { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+    .group-list-loading { font-size: 12px; color: var(--text-3); }
+    .group-list-empty { font-size: 12px; color: var(--text-3); font-style: italic; }
+    .group-list-item {
+      padding: 8px 10px; border-radius: var(--radius-md);
+      background: var(--group-accent-soft); border: 1px solid rgba(16,185,129,0.2);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .group-list-item:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
+    .group-list-item-name { font-size: 13px; font-weight: 700; color: var(--text-1); }
+    .group-list-item-count { font-size: 11px; color: var(--text-3); }
+
+    @media (max-width: 600px) {
+      #auth-panel-group { flex-direction: column !important; }
+      .group-divider { width: 100%; height: 1px; margin: 0; }
+      .group-list-panel { width: 100%; }
+      .group-list-items { flex-direction: row; flex-wrap: wrap; max-height: none; }
+    }
+
+    /* Abas principais: Conta / Grupo */
+    .auth-tabs {
+      display: flex; gap: 4px; background: var(--bg-btn);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 3px;
+    }
+    .auth-tab {
+      flex: 1; padding: 8px 10px; border: none; border-radius: calc(var(--radius-md) - 2px);
+      background: transparent; color: var(--text-3);
+      font-family: var(--font-body); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .auth-tab:hover { color: var(--text-1); }
+    .auth-tab.active {
+      background: var(--accent); color: #fff;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    /* Aba grupo com cor verde quando ativa */
+    #tab-group.active { background: var(--group-accent); box-shadow: 0 2px 8px var(--group-accent-glow); }
+
+    /* Sub-abas dentro do painel de grupo: Entrar / Criar */
+    .group-sub-tabs {
+      display: flex; gap: 4px;
+      border-bottom: 1px solid var(--border); padding-bottom: 12px;
+    }
+    .group-sub-tab {
+      padding: 6px 16px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); background: transparent;
+      color: var(--text-3); font-family: var(--font-body);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .group-sub-tab:hover { color: var(--text-1); border-color: var(--border-hover); }
+    .group-sub-tab.active {
+      background: var(--group-accent-soft); color: var(--group-accent);
+      border-color: var(--group-accent-glow);
+    }
+
+    /* Lista de grupos existentes — aparece abaixo do form */
+    .group-list-section {
+      border-top: 1px solid var(--border); padding-top: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .group-list-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--group-accent);
+    }
+    .group-list-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      max-height: 100px; overflow-y: auto;
+    }
+    .group-list-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border-radius: 99px;
+      background: var(--group-accent-soft); border: 1px solid rgba(16,185,129,0.25);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .group-list-chip:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+    .group-list-chip-name { font-size: 12px; font-weight: 700; color: var(--text-1); }
+    .group-list-chip-count { font-size: 10px; color: var(--text-3); }
+    .group-list-loading { font-size: 12px; color: var(--text-3); }
+    .group-list-empty   { font-size: 12px; color: var(--text-3); font-style: italic; }
+
+    /* Badge de grupo no header */
+    .group-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);
+      color: #10b981; border-radius: 99px;
+      padding: 3px 10px 3px 8px; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .group-badge-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #10b981;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
     /* ─── Campo que aparece só no register ─── */
     .register-only { display: none; }
     .auth-box[data-auth-mode="register"] .register-only { display: flex; }
@@ -273,11 +409,11 @@
     .logo-name .dot-accent { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-left: 2px; margin-bottom: 5px; vertical-align: bottom; }
     .logo-tagline { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-top: 3px; }
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-2); font-size: 16px; user-select: none; transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s; position: relative; }
+    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-glass); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-2); font-size: 16px; user-select: none; transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s; position: relative; }
     .icon-btn:hover { background: var(--bg-glass-hover); border-color: var(--border-hover); color: var(--text-1); transform: translateY(-1px); }
     .icon-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
     .icon-btn .badge { position: absolute; top: -4px; right: -4px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .layout-group { display: flex; gap: 4px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; backdrop-filter: var(--blur); }
+    .layout-group { display: flex; gap: 4px; background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; }
     .layout-btn { width: 32px; height: 32px; border-radius: 10px; border: none; background: transparent; cursor: pointer; color: var(--text-2); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
     .layout-btn.active { background: var(--accent-soft); color: var(--accent); }
     .layout-btn:hover:not(.active) { background: var(--bg-glass-hover); color: var(--text-1); }
@@ -604,6 +740,7 @@
       min-height: 420px; transition: background 0.3s, border-color 0.3s, box-shadow 0.4s;
       box-shadow: 0 0 40px color-mix(in srgb, var(--col-color,#888) 18%, transparent),
         inset 0 0 40px color-mix(in srgb, var(--col-color,#888) 6%, transparent);
+      contain: layout style; /* isola repaints e layout por coluna */
     }
     .column.drag-over { background: var(--bg-glass-hover); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow), 0 0 40px color-mix(in srgb, var(--col-color,#888) 18%, transparent); }
     .layout-list .column { min-height: auto; }
@@ -661,6 +798,9 @@
     .card-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
     .card-btn.delete:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.4); }
     .card-btn.edit-btn:hover { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+    .card-btn.transfer-btn { font-size: 10px; padding: 3px 6px; color: var(--text-3); }
+    .card-btn.transfer-btn:hover { background: rgba(var(--accent-rgb),0.15); color: var(--accent); border-color: rgba(var(--accent-rgb),0.4); }
+    .badge-grupo { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
     .card-btn[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; font-size: 10px; white-space: nowrap; padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 10; }
     .card-btn[data-tip]:hover::after { opacity: 1; }
     .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none; border: 1px solid transparent; transition: transform 0.15s, opacity 0.15s; }
@@ -1094,12 +1234,20 @@
   <div id="auth-screen" class="auth-overlay">
     <div class="auth-box" id="auth-box" data-auth-mode="login">
 
-      <!-- Ícone de cabeçalho (muda por modo) -->
-      <div class="auth-icon-wrap">
-        <div class="auth-icon" id="auth-icon">🔑</div>
-        <div class="auth-title" id="auth-title">Bem-vindo de volta</div>
-        <div class="auth-subtitle" id="auth-subtitle">Entre com sua conta para continuar no Driftask</div>
+      <!-- Abas: Conta / Grupo -->
+      <div class="auth-tabs" id="auth-tabs">
+        <button class="auth-tab active" id="tab-account" onclick="switchAuthTab('account')">🔑 Conta</button>
+        <button class="auth-tab" id="tab-group" onclick="switchAuthTab('group')">👥 Grupo</button>
       </div>
+
+      <!-- Painel: Conta pessoal (login/cadastro) -->
+      <div id="auth-panel-account">
+        <!-- Ícone de cabeçalho (muda por modo) -->
+        <div class="auth-icon-wrap">
+          <div class="auth-icon" id="auth-icon">🔑</div>
+          <div class="auth-title" id="auth-title">Bem-vindo de volta</div>
+          <div class="auth-subtitle" id="auth-subtitle">Entre com sua conta para continuar no Driftask</div>
+        </div>
 
       <!-- ❌ Bloco de ERRO DE ACESSO (aparece quando credenciais falham) -->
       <div class="auth-access-denied" id="auth-access-denied">
@@ -1221,6 +1369,107 @@
         Primeiro acesso? <span onclick="switchToRegister()">Cadastre-se aqui</span>
       </div>
 
+      </div><!-- /auth-panel-account -->
+
+      <!-- Painel: Grupo Compartilhado -->
+      <!-- Painel: Grupo Compartilhado — mesma largura e estilo do painel de conta -->
+      <div id="auth-panel-group" style="display:none;flex-direction:column;gap:16px;">
+
+        <!-- Header igual ao de conta, mas ícone verde -->
+        <div class="auth-icon-wrap">
+          <div class="auth-icon" style="background:var(--group-accent-soft);border-color:var(--group-accent-glow);">👥</div>
+          <div class="auth-title" style="color:var(--group-accent);">Grupo Compartilhado</div>
+          <div class="auth-subtitle">Kanban colaborativo em tempo real</div>
+        </div>
+
+        <!-- Sub-abas: Entrar / Criar (mesmo estilo das abas principais) -->
+        <div class="group-sub-tabs">
+          <button class="group-sub-tab active" id="tab-group-join" onclick="switchGroupTab('join')">Entrar no Grupo</button>
+          <button class="group-sub-tab" id="tab-group-create" onclick="switchGroupTab('create')">Criar Grupo</button>
+        </div>
+
+        <!-- Entrar no grupo -->
+        <div id="group-join-panel" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="auth-field">
+            <div class="auth-field-label">Nome do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="text" id="group-join-name" class="auth-input"
+                placeholder="ex: equipe-dev, Amazonas TI"
+                autocomplete="off"
+                oninput="clearFieldError('group-join-name')"
+                onkeydown="if(event.key==='Enter')handleGroupJoin()">
+            </div>
+            <div class="auth-field-error" id="group-join-name-error"></div>
+          </div>
+          <div class="auth-field">
+            <div class="auth-field-label">Senha do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-join-password" class="auth-input"
+                placeholder="••••••••"
+                autocomplete="off"
+                oninput="clearFieldError('group-join-password')"
+                onkeydown="if(event.key==='Enter')handleGroupJoin()">
+              <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
+            </div>
+            <div class="auth-field-error" id="group-join-password-error"></div>
+          </div>
+          <button class="auth-submit-btn" id="group-join-btn"
+            style="background:var(--group-accent);box-shadow:0 4px 16px var(--group-accent-glow);"
+            onclick="handleGroupJoin()">Entrar no Grupo →</button>
+        </div>
+
+        <!-- Criar grupo -->
+        <div id="group-create-panel" style="display:none;flex-direction:column;gap:12px;">
+          <div class="auth-field">
+            <div class="auth-field-label">Nome do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="text" id="group-create-name" class="auth-input"
+                placeholder="ex: familia-souza"
+                autocomplete="off"
+                oninput="clearFieldError('group-create-name')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
+            </div>
+            <div class="auth-field-error" id="group-create-name-error"></div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">⚠ O nome não pode ser alterado depois</div>
+          </div>
+          <div class="auth-field">
+            <div class="auth-field-label">Senha do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-create-password" class="auth-input"
+                placeholder="mínimo 4 caracteres"
+                autocomplete="new-password"
+                oninput="clearFieldError('group-create-password')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
+              <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
+            </div>
+            <div class="auth-field-error" id="group-create-password-error"></div>
+          </div>
+          <div class="auth-field">
+            <div class="auth-field-label">Confirmar Senha</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-create-confirm" class="auth-input"
+                placeholder="repita a senha"
+                autocomplete="new-password"
+                oninput="clearFieldError('group-create-confirm')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
+            </div>
+            <div class="auth-field-error" id="group-create-confirm-error"></div>
+          </div>
+          <button class="auth-submit-btn" id="group-create-btn"
+            style="background:var(--group-accent);box-shadow:0 4px 16px var(--group-accent-glow);"
+            onclick="handleGroupCreate()">Criar Grupo ✦</button>
+        </div>
+
+        <!-- Lista de grupos existentes — chips abaixo do form -->
+        <div class="group-list-section">
+          <div class="group-list-title">👥 Grupos disponíveis — clique para entrar</div>
+          <div id="group-list-items" class="group-list-chips">
+            <span class="group-list-loading">⏳ Carregando...</span>
+          </div>
+        </div>
+
+      </div><!-- /auth-panel-group -->
+
     </div>
   </div>
 
@@ -1267,7 +1516,15 @@
         <div class="clock-date" id="clock-date">...</div>
       </div>
       <div class="clock-right">
-        <div class="profile-switcher">
+        <!-- Badge de grupo compartilhado (visível apenas no modo grupo) -->
+        <div id="group-header-badge" style="display:none;">
+          <div class="group-badge">
+            <div class="group-badge-dot"></div>
+            <span id="group-badge-name">Grupo</span>
+            <button onclick="leaveGroup()" title="Sair do grupo" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;margin-left:4px;font-size:13px;opacity:0.7;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">✕</button>
+          </div>
+        </div>
+        <div class="profile-switcher" id="profile-switcher">
           <button class="profile-btn active" id="btn-pessoal" onclick="switchProfile('pessoal')">
             <span class="profile-dot" style="background:#34d399"></span> Pessoal
           </button>
@@ -1402,13 +1659,9 @@
         <div class="ai-popup-title">
           <span style="color:var(--accent)">✦</span>
           Assistente IA
-          <span class="ai-status-badge" id="ai-status-badge">
-            <span class="ai-status-dot" id="ai-status-dot"></span>
-            <span id="ai-status-label">verificando...</span>
-          </span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <div class="ai-powered-by">Claude · Anthropic</div>
+          <div class="ai-powered-by">Groq · LLaMA</div>
           <div class="ai-popup-close" onclick="closeAI()">✕</div>
         </div>
       </div>
@@ -1443,8 +1696,8 @@
       <!-- Mensagens -->
       <div class="ai-messages" id="ai-messages">
         <div class="ai-msg bot">
-          Olá! Sou seu assistente de produtividade powered by <strong>Claude (Anthropic)</strong>.
-          Posso analisar suas tarefas, sugerir prioridades e adicionar itens ao board com um clique! 🚀
+          Olá! Sou sua IA assistente powered by <strong>LLaMA 3.3 70B (Groq)</strong>.
+          Posso responder qualquer pergunta — programação, dúvidas gerais, criatividade — e também analisar suas tarefas do board. 🚀
         </div>
       </div>
 
@@ -1615,7 +1868,7 @@
           background:rgba(139,92,246,0.15);color:#a78bfa;
           border:1px solid rgba(139,92,246,0.3);
           padding:2px 7px;border-radius:99px;margin-left:6px;text-transform:uppercase;">
-          Claude · Anthropic
+          Groq · LLaMA
         </span>
       </div>
 
@@ -1647,6 +1900,23 @@
       <button class="sidebar-btn danger" onclick="confirmClear()">🗑 Limpar todas as tarefas</button>
     </div>
 
+    <div class="sidebar-divider"></div>
+
+    <div class="setting-section">
+      <div class="setting-label">Conta</div>
+      <button class="sidebar-btn" id="sidebar-logout-btn"
+        style="display:none;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;"
+        onclick="logoutUser();closeSidebar()">
+        🚪 Sair da conta
+      </button>
+      <button class="sidebar-btn" id="sidebar-group-leave-btn"
+        style="display:none;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#10b981;"
+        onclick="leaveGroup();closeSidebar()">
+        👥 Sair do grupo
+      </button>
+      <div id="sidebar-account-info" style="font-size:11px;color:var(--text-3);margin-top:4px;"></div>
+    </div>
+
   </div>
 
   <script>
@@ -1676,6 +1946,12 @@
     let authMode     = 'login';
     let debounceSyncTimeout = null;
     let tasksLoaded = false; // Proteção: impede POST ao banco antes de carregar tarefas
+    let _rafRenderPending = false;
+    function scheduleRender() {
+      if (_rafRenderPending) return; // já tem render agendado, ignora
+      _rafRenderPending = true;
+      requestAnimationFrame(() => { _rafRenderPending = false; renderAll(); });
+    }
 
     /* ─── PERSISTÊNCIA & CONEXÃO BACKEND ─── */
 
@@ -2218,7 +2494,7 @@
       document.getElementById('btn-pessoal').classList.toggle('active', p === 'pessoal');
       document.getElementById('btn-profissional').classList.toggle('active', p === 'profissional');
       STATE.pages = { todo:1, doing:1, done:1 };
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
     }
     function applyProfile() {
       document.getElementById('btn-pessoal').classList.toggle('active', STATE.profile === 'pessoal');
@@ -2290,7 +2566,7 @@
       FILTER_COL   = document.getElementById('filter-col').value;
       document.getElementById('search-clear').classList.toggle('show', SEARCH_QUERY.length > 0);
       STATE.pages = { todo:1, doing:1, done:1 };
-      renderAll();
+      scheduleRender();
     }
     function clearSearch() {
       document.getElementById('search-input').value = '';
@@ -2341,7 +2617,7 @@
         const oldCol = task.col;
         task.col = col;
         STATE.pages[col] = 1;
-        saveState(); renderAll(); updateStats();
+        saveState(); scheduleRender(); updateStats();
         bumpCounter(oldCol); bumpCounter(col);
         if (col === 'done') {
           launchConfetti();
@@ -2419,7 +2695,7 @@
           const oldCol = task.col;
           task.col = col;
           STATE.pages[col] = 1;
-          saveState(); renderAll(); updateStats();
+          saveState(); scheduleRender(); updateStats();
           bumpCounter(oldCol); bumpCounter(col);
           if (col === 'done') { launchConfetti(); showToast('Tarefa concluída! 🎉', 'success'); }
         }
@@ -2474,17 +2750,34 @@
       if (!task) return;
       const cycle = ['low','medium','high'];
       task.priority = cycle[(cycle.indexOf(task.priority||'medium') + 1) % 3];
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
     }
 
     /* ─── CRIAR CARD ─── */
+    /* ─── CARD CACHE (diffing) ───────────────────────────────────────────
+       Guarda referência ao elemento DOM e um hash do conteúdo de cada card.
+       renderAll() reutiliza elementos existentes quando nada mudou,
+       evitando reconstruir o DOM inteiro a cada ação.
+    ─────────────────────────────────────────────────────────────────── */
+    const _cardCache = new Map(); // taskId → { el: HTMLElement, hash: string }
+
+    function _cardHash(task) {
+      return [task.text, task.notes, task.col, task.priority, task.starred,
+              task.due, task.profile, SEARCH_QUERY].join('|');
+    }
+
     function createCardEl(task) {
       const card = document.createElement('div');
       card.className = 'card'; card.dataset.id = task.id;
       card.draggable = true;
       card.addEventListener('dragstart', e => onDragStart(e, task.id));
       card.addEventListener('dragend', onDragEnd);
+      _fillCardEl(card, task);
+      return card;
+    }
 
+    function _fillCardEl(card, task) {
+      const isGroup = task.profile === 'grupo';
       let moveBtns = '';
       if (task.col === 'todo') {
         moveBtns = `<button class="card-btn" data-tip="Mover para Em Andamento" onclick="moveTask('${task.id}','doing')">→</button>`;
@@ -2494,13 +2787,21 @@
         moveBtns = `<button class="card-btn" data-tip="Reabrir" onclick="moveTask('${task.id}','doing')">↩</button>`;
       }
 
+      // Botão de transferência de perfil (apenas para tarefas pessoais/profissionais)
+      let transferBtn = '';
+      if (!isGroup) {
+        const targetProfile = task.profile === 'profissional' ? 'pessoal' : 'profissional';
+        const targetLabel   = task.profile === 'profissional' ? '→ Pess.' : '→ Prof.';
+        const targetTip     = task.profile === 'profissional' ? 'Enviar para Pessoal' : 'Enviar para Profissional';
+        transferBtn = `<button class="card-btn transfer-btn" data-tip="${targetTip}" onclick="transferTask('${task.id}','${targetProfile}')" title="${targetTip}">${targetLabel}</button>`;
+      }
+
       const pi = getPrioInfo(task.priority || 'medium');
-      const profileCls = task.profile === 'profissional' ? 'badge-profissional' : 'badge-pessoal';
-      const profileLabel = task.profile === 'profissional' ? 'Prof.' : 'Pess.';
+      const profileCls   = task.profile === 'profissional' ? 'badge-profissional' : task.profile === 'grupo' ? 'badge-grupo' : 'badge-pessoal';
+      const profileLabel = task.profile === 'profissional' ? 'Prof.' : task.profile === 'grupo' ? 'Grupo' : 'Pess.';
       const duePart = task.due ? (() => { const d = formatDue(task.due); return d ? `<span class="card-due ${d.cls}">${d.label}</span>` : ''; })() : '';
       const notesPart = task.notes ? `<div class="card-notes">${escapeHtml(task.notes)}</div>` : '';
 
-      // highlight search terms
       let textHtml = escapeHtml(task.text);
       if (SEARCH_QUERY) {
         const re = new RegExp(SEARCH_QUERY.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
@@ -2521,58 +2822,97 @@
           </div>
           <div class="card-actions">
             ${moveBtns}
+            ${transferBtn}
             <button class="card-btn edit-btn" data-tip="Editar" onclick="openEdit('${task.id}')">✏</button>
             <button class="card-btn delete" data-tip="Excluir" onclick="deleteTask('${task.id}')">✕</button>
           </div>
         </div>`;
-      return card;
     }
 
     /* ─── RENDERIZAÇÃO ─── */
     function renderAll() {
-      const cols = FILTER_COL ? [FILTER_COL] : ['todo','doing','done'];
+      const cols = ['todo','doing','done'];
       let totalVisible = 0;
 
-      ['todo','doing','done'].forEach(col => {
+      cols.forEach(col => {
         const area  = document.getElementById(`cards-${col}`);
         const empty = document.getElementById(`empty-${col}`);
         const count = document.getElementById(`count-${col}`);
         const alert = document.getElementById(`alert-${col}`);
         const pages = document.getElementById(`pages-${col}`);
 
-        const allTasks = STATE.tasks.filter(t => matchesFilters(t) && t.col === col);
+        const allTasks    = STATE.tasks.filter(t => matchesFilters(t) && t.col === col);
         const allColTasks = STATE.tasks.filter(t => t.col === col && t.profile === STATE.profile);
-        const total = allTasks.length;
-        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        STATE.pages[col] = Math.min(STATE.pages[col] || 1, totalPages);
-        const curPage = STATE.pages[col];
-        const start = (curPage - 1) * PAGE_SIZE;
-        const pageTasks = allTasks.slice(start, start + PAGE_SIZE);
+        const total       = allTasks.length;
+        const totalPages  = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        STATE.pages[col]  = Math.min(STATE.pages[col] || 1, totalPages);
+        const curPage     = STATE.pages[col];
+        const pageTasks   = allTasks.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE);
 
-        area.innerHTML = '';
         count.textContent = allColTasks.length;
         alert.classList.toggle('show', allColTasks.length > 20);
 
-        const isFiltered = FILTER_COL && FILTER_COL !== col;
+        // Oculta coluna se filtro de coluna estiver ativo e não for esta
         const colEl = document.getElementById(`col-${col}`);
-        if (colEl) colEl.style.display = isFiltered ? 'none' : '';
+        if (colEl) colEl.style.display = (FILTER_COL && FILTER_COL !== col) ? 'none' : '';
 
+        // ── Card Diffing ──────────────────────────────────────────────
+        // Em vez de limpar innerHTML, reutilizamos cards existentes.
+        // Só recriamos/atualizamos cards cujo conteúdo realmente mudou.
         if (total === 0 && (SEARCH_QUERY || FILTER_PRIO)) {
+          area.innerHTML = '';
           empty.style.display = 'none';
           const nr = document.createElement('div');
           nr.className = 'no-results'; nr.textContent = 'Nenhum resultado';
           area.appendChild(nr);
         } else {
           empty.style.display = total === 0 ? 'flex' : 'none';
-          pageTasks.forEach(task => area.appendChild(createCardEl(task)));
+
+          // IDs que devem aparecer neste render
+          const targetIds = pageTasks.map(t => t.id);
+
+          // Remove cards que não pertencem mais a esta página
+          [...area.children].forEach(child => {
+            if (child.dataset.id && !targetIds.includes(child.dataset.id)) {
+              _cardCache.delete(child.dataset.id);
+              child.remove();
+            }
+          });
+
+          // Itera na ordem correta, criando ou atualizando cada card
+          pageTasks.forEach((task, i) => {
+            const hash    = _cardHash(task);
+            const cached  = _cardCache.get(task.id);
+            let   cardEl;
+
+            if (cached) {
+              cardEl = cached.el;
+              // Só refaz innerHTML se o conteúdo mudou
+              if (cached.hash !== hash) {
+                _fillCardEl(cardEl, task);
+                cached.hash = hash;
+              }
+            } else {
+              cardEl = createCardEl(task);
+              _cardCache.set(task.id, { el: cardEl, hash });
+            }
+
+            // Garante ordem correta no DOM sem mover elementos que já estão no lugar
+            const existing = area.children[i];
+            if (existing !== cardEl) {
+              area.insertBefore(cardEl, existing || null);
+            }
+          });
         }
+
         totalVisible += total;
 
+        // ── Paginação ─────────────────────────────────────────────────
         pages.innerHTML = '';
         if (totalPages > 1) {
           const prev = document.createElement('button');
           prev.className = 'page-btn'; prev.textContent = '‹'; prev.disabled = curPage === 1;
-          prev.onclick = () => { STATE.pages[col] = curPage - 1; saveState(); renderAll(); };
+          prev.onclick = () => { STATE.pages[col] = curPage - 1; saveState(); scheduleRender(); };
           pages.appendChild(prev);
           for (let p = 1; p <= totalPages; p++) {
             if (totalPages > 7 && p > 2 && p < totalPages - 1 && Math.abs(p - curPage) > 1) {
@@ -2587,12 +2927,12 @@
             const btn = document.createElement('button');
             btn.className = 'page-btn' + (p === curPage ? ' active' : '');
             btn.textContent = p;
-            btn.onclick = () => { STATE.pages[col] = p; saveState(); renderAll(); };
+            btn.onclick = () => { STATE.pages[col] = p; saveState(); scheduleRender(); };
             pages.appendChild(btn);
           }
           const next = document.createElement('button');
           next.className = 'page-btn'; next.textContent = '›'; next.disabled = curPage === totalPages;
-          next.onclick = () => { STATE.pages[col] = curPage + 1; saveState(); renderAll(); };
+          next.onclick = () => { STATE.pages[col] = curPage + 1; saveState(); scheduleRender(); };
           pages.appendChild(next);
         }
       });
@@ -2630,7 +2970,7 @@
       input.value = ''; due.value = '';
       input.focus();
       STATE.pages.todo = 1;
-      saveState(); renderAll(); updateStats(); bumpCounter('todo'); pingColDot('todo');
+      saveState(); scheduleRender(); updateStats(); bumpCounter('todo'); pingColDot('todo');
       showToast('Tarefa adicionada!', 'success');
     }
 
@@ -2641,9 +2981,22 @@
       const oldCol = task.col;
       task.col = newCol;
       STATE.pages[newCol] = 1;
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
       bumpCounter(oldCol); bumpCounter(newCol);
       if (newCol === 'done') { launchConfetti(); showToast('Tarefa concluída! 🎉', 'success'); }
+    }
+
+    function transferTask(id, targetProfile) {
+      const task = STATE.tasks.find(t => t.id === id);
+      if (!task) return;
+      pushUndo('Tarefa transferida');
+      const fromLabel = task.profile === 'profissional' ? 'Profissional' : 'Pessoal';
+      const toLabel   = targetProfile === 'profissional' ? 'Profissional' : 'Pessoal';
+      task.profile = targetProfile;
+      // Limpa cache do card para forçar re-render
+      _cardCache.delete(id);
+      saveState(); scheduleRender(); updateStats();
+      showToast(`Tarefa enviada de ${fromLabel} → ${toLabel}`, 'success');
     }
 
     function deleteTask(id) {
@@ -2657,7 +3010,7 @@
       cardEl.addEventListener('animationend', () => {
         if (task) bumpCounter(task.col);
         STATE.tasks = STATE.tasks.filter(t => t.id !== id);
-        saveState(); renderAll(); updateStats();
+        saveState(); scheduleRender(); updateStats();
       }, { once: true });
     }
 
@@ -2699,7 +3052,7 @@
       task.due      = document.getElementById('edit-due').value || null;
       task.col      = newCol;
       closeEdit();
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
       if (oldCol !== newCol) { bumpCounter(oldCol); bumpCounter(newCol); }
       showToast('Tarefa atualizada!', 'success');
     }
@@ -2797,7 +3150,7 @@
     function executeClear() {
       STATE.tasks = STATE.tasks.filter(t => t.profile !== STATE.profile);
       STATE.pages = { todo:1, doing:1, done:1 };
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
       showToast('Tarefas removidas.', 'error');
       closeSidebar();
       closeConfirm();
@@ -2954,6 +3307,27 @@
       document.getElementById('sidebar-overlay').classList.add('open');
       buildAccentGrid(); buildColPresets();
       setTimeout(checkAIStatus, 300);
+      _updateSidebarAccount();
+    }
+    function _updateSidebarAccount() {
+      const logoutBtn  = document.getElementById('sidebar-logout-btn');
+      const groupBtn   = document.getElementById('sidebar-group-leave-btn');
+      const info       = document.getElementById('sidebar-account-info');
+      if (!logoutBtn) return;
+      // Mostra botão de sair do grupo se estiver em um grupo
+      if (GROUP_TOKEN && GROUP_NAME) {
+        groupBtn.style.display  = '';
+        logoutBtn.style.display = STATE.token ? '' : 'none';
+        if (info) info.textContent = `Grupo: ${GROUP_NAME}${STATE.email ? ' · ' + STATE.email : ''}`;
+      } else if (STATE.token) {
+        logoutBtn.style.display = '';
+        groupBtn.style.display  = 'none';
+        if (info) info.textContent = STATE.email || '';
+      } else {
+        logoutBtn.style.display = 'none';
+        groupBtn.style.display  = 'none';
+        if (info) info.textContent = 'Não conectado';
+      }
     }
     function closeSidebar() {
       document.getElementById('sidebar').classList.remove('open');
@@ -2962,11 +3336,19 @@
 
     /* ─── ASSISTENTE IA (ANTHROPIC) ─── */
     let aiCtx = 'todo';
+    let aiHistory = []; // histórico de mensagens para contexto de conversa
     function openAI() {
       document.getElementById('ai-overlay').classList.add('open');
       setTimeout(() => document.getElementById('ai-input').focus(), 400);
     }
-    function closeAI() { document.getElementById('ai-overlay').classList.remove('open'); }
+    function closeAI() {
+      document.getElementById('ai-overlay').classList.remove('open');
+      // Limpa histórico ao fechar para nova conversa
+      aiHistory = [];
+      const msgs = document.getElementById('ai-messages');
+      // mantém apenas a primeira mensagem de boas-vindas
+      while (msgs.children.length > 1) msgs.removeChild(msgs.lastChild);
+    }
     function closeAIOutside(e) { if (e.target === document.getElementById('ai-overlay')) closeAI(); }
     function setCtx(ctx) {
       aiCtx = ctx;
@@ -2989,9 +3371,11 @@
       const icon = document.getElementById('ai-status-icon');
       const msg  = document.getElementById('ai-status-msg');
       if (!box) return;
+
       icon.textContent = '⏳';
       msg.innerHTML = '<span style="color:var(--text-3)">Verificando conexão...</span>';
       box.style.borderColor = 'var(--border)';
+
       try {
         const res  = await fetch('/api/ai', {
           method:  'POST',
@@ -3002,18 +3386,18 @@
         if (data.ok) {
           icon.textContent = '✅';
           msg.innerHTML = `
-            <strong style="color:#10b981">IA ativa</strong> · Claude Haiku<br>
+            <strong style="color:#10b981">IA ativa</strong> · LLaMA 3.3 70B<br>
             <span style="font-size:10px;color:var(--text-3)">Assistente pronto para uso ✓</span>`;
           box.style.borderColor = 'rgba(16,185,129,0.4)';
         } else {
-          throw new Error('sem chave');
+          throw new Error(data.error || 'sem chave');
         }
-      } catch {
+      } catch(e) {
         icon.textContent = '⚠️';
         msg.innerHTML = `
           <strong style="color:#f59e0b">IA não configurada</strong><br>
           <span style="font-size:10px;color:var(--text-3)">
-            Contate o administrador para ativar o assistente.
+            Verifique se GROQ_API_KEY está configurada na Vercel.
           </span>`;
         box.style.borderColor = 'rgba(245,158,11,0.35)';
       }
@@ -3028,11 +3412,22 @@
         `- [${(t.priority||'medium').toUpperCase()}] ${t.text}${t.due ? ` (vence: ${t.due})` : ''}`
       ).join('\n');
       const profileLabel = STATE.profile === 'profissional' ? 'profissional' : 'pessoal';
-      const system = `Você é um assistente de produtividade integrado ao Driftask (app kanban). Perfil: "${profileLabel}", coluna: "${colName}".
-Tarefas atuais (máx 12):
-${taskList || 'Nenhuma tarefa ainda.'}
-Responda em português brasileiro, de forma objetiva. Máx 3 parágrafos curtos.
-Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário poderá adicioná-las com um clique.`;
+
+      // Contexto das tarefas — incluído apenas se o usuário tiver tarefas
+      const system = `Você é uma IA assistente de uso geral. Responda qualquer pergunta do usuário sobre qualquer assunto: programação, ciências, clima, culinária, matemática, história, criatividade, etc.
+
+REGRA PRINCIPAL: Nunca recuse responder dizendo que só fala sobre tarefas. Você é uma IA completa.
+
+Idioma: sempre português brasileiro.
+Formato: direto e claro, sem exageros.
+
+${taskList ? `Contexto adicional do Driftask (use APENAS se o usuário perguntar sobre suas tarefas ou produtividade, ignore para outros assuntos):
+- Perfil: ${profileLabel} | Coluna: ${colName}
+- Tarefas: 
+${taskList}
+
+Para sugerir novas tarefas ao kanban, inicie a linha com "TAREFA:" e o usuário poderá adicioná-las com um clique.` : ''}`;
+
       return { system, relTasks, profileLabel, colName };
     }
 
@@ -3099,18 +3494,22 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       input.value = '';
       input.style.height = 'auto';
 
+      // Adiciona mensagem do usuário na tela
       const userEl = document.createElement('div');
       userEl.className = 'ai-msg user'; userEl.textContent = text;
       msgs.appendChild(userEl); msgs.scrollTop = msgs.scrollHeight;
+
+      // Adiciona no histórico
+      aiHistory.push({ role: 'user', content: text });
 
       const loadEl = document.createElement('div');
       loadEl.className = 'ai-msg loading';
       loadEl.innerHTML = '<span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span>';
       msgs.appendChild(loadEl); msgs.scrollTop = msgs.scrollHeight;
 
-      const { system, relTasks, profileLabel, colName } = _buildAIPrompt(text, aiCtx);
+      const { system } = _buildAIPrompt(text, aiCtx);
 
-      // Estratégia 1: Servidor Vercel (ANTHROPIC_API_KEY no backend)
+      // Envia histórico completo para o servidor
       try {
         const res = await fetch('/api/ai', {
           method:  'POST',
@@ -3118,34 +3517,40 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
             'Content-Type':  'application/json',
             'Authorization': STATE.token ? `Bearer ${STATE.token}` : ''
           },
-          body: JSON.stringify({ system, message: text })
+          body: JSON.stringify({ system, messages: aiHistory })
         });
 
         const data = await res.json();
 
         if (res.ok && data.reply) {
+          aiHistory.push({ role: 'assistant', content: data.reply });
+          if (aiHistory.length > 40) aiHistory = aiHistory.slice(-40);
           _renderAIReply(data.reply, msgs, loadEl);
           return;
         }
-        // Se servidor retornou fallback:true, tenta chave do usuário
-        if (!data.fallback) throw new Error(data.error || 'Erro no servidor');
-      } catch (serverErr) {
-        // servidor falhou — tenta próxima estratégia
-      }
 
-      // Estratégia 2: Sem API configurada → mostra mensagem clara
-      loadEl.remove();
-      const noKeyEl = document.createElement('div');
-      noKeyEl.className = 'ai-msg bot';
-      noKeyEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div>🤖 <strong>Assistente temporariamente indisponível</strong></div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">
-            O assistente Claude não está configurado neste momento.<br>
-            Entre em contato com o administrador do sistema para ativar esta função.
-          </div>
+        // Erro com mensagem real do servidor — mostra para o usuário
+        const errText = data.error || `Erro ${res.status}`;
+        aiHistory.pop();
+        loadEl.remove();
+        const errEl = document.createElement('div');
+        errEl.className = 'ai-msg bot';
+        errEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;">
+          <div>⚠️ <strong>Erro ao contatar a IA</strong></div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6;">${escapeHtml(errText)}</div>
+          <div style="font-size:11px;color:var(--text-3);">Verifique se ANTHROPIC_API_KEY está configurada no painel da Vercel.</div>
         </div>`;
-      msgs.appendChild(noKeyEl); msgs.scrollTop = msgs.scrollHeight;
+        msgs.appendChild(errEl); msgs.scrollTop = msgs.scrollHeight;
+        return;
+
+      } catch (networkErr) {
+        aiHistory.pop();
+        loadEl.remove();
+        const netEl = document.createElement('div');
+        netEl.className = 'ai-msg bot';
+        netEl.innerHTML = `<div>🔌 <strong>Sem conexão</strong><br><span style="font-size:12px;color:var(--text-2);">Verifique sua internet e tente novamente.</span></div>`;
+        msgs.appendChild(netEl); msgs.scrollTop = msgs.scrollHeight;
+      }
     }
 
     function generateFallbackResponse(t, tasks, profile, col) { return _fallbackAI(t, tasks, profile, col); }
@@ -3158,7 +3563,7 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
         date: new Date().toISOString(), due: null
       });
       STATE.pages.todo = 1;
-      saveState(); renderAll(); updateStats(); bumpCounter(aiCtx === 'geral' ? 'todo' : aiCtx); pingColDot(aiCtx === 'geral' ? 'todo' : aiCtx);
+      saveState(); scheduleRender(); updateStats(); bumpCounter(aiCtx === 'geral' ? 'todo' : aiCtx); pingColDot(aiCtx === 'geral' ? 'todo' : aiCtx);
       showToast(`Tarefa adicionada ao board!`, 'success');
     }
 
@@ -3200,7 +3605,7 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       if (!UNDO_STACK.length) return;
       const { snapshot } = UNDO_STACK.pop();
       STATE.tasks = JSON.parse(snapshot);
-      saveState(); renderAll(); updateStats();
+      saveState(); scheduleRender(); updateStats();
       showToast('↩ Ação desfeita', '');
       hideUndoBar();
     }
@@ -3231,7 +3636,7 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       const task = STATE.tasks.find(t => t.id === id);
       if (!task) return;
       task.starred = !task.starred;
-      saveState(); renderAll();
+      saveState(); scheduleRender();
     }
 
     // ── COLAPSO DE COLUNA ────────────────────────────────────────
@@ -3305,6 +3710,262 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       renderAll();
       updateStats();
     }
+    // ════════════════════════════════════════════════════════════════
+    //  GRUPOS COMPARTILHADOS
+    // ════════════════════════════════════════════════════════════════
+
+    let GROUP_TOKEN     = localStorage.getItem('driftask_group_token') || null;
+    let GROUP_NAME      = localStorage.getItem('driftask_group_name')  || null;
+    let GROUP_POLL_ID   = null;
+    const GROUP_POLL_MS = 3000; // sincroniza a cada 3 segundos (era 5s)
+    let GROUP_LAST_UPDATED = null; // timestamp do último update do servidor
+
+    /* ── Abas auth: Conta ↔ Grupo ─────────────────────────────────── */
+    function switchAuthTab(tab) {
+      document.getElementById('tab-account').classList.toggle('active', tab === 'account');
+      document.getElementById('tab-group').classList.toggle('active',   tab === 'group');
+      document.getElementById('auth-panel-account').style.display = tab === 'account' ? '' : 'none';
+      document.getElementById('auth-panel-group').style.display   = tab === 'group'   ? 'flex' : 'none';
+      if (tab === 'group') loadGroupList(); // sempre recarrega ao abrir
+    }
+
+    /* ── Lista pública de grupos ──────────────────────────────────── */
+    async function loadGroupList() {
+      const el = document.getElementById('group-list-items');
+      if (!el) return;
+      el.innerHTML = '<span class="group-list-loading">⏳ Carregando...</span>';
+      try {
+        const res  = await fetch('/api/groups');
+        if (!res.ok) throw new Error('Erro ' + res.status);
+        const data = await res.json();
+        if (!data.groups || data.groups.length === 0) {
+          el.innerHTML = '<span class="group-list-empty">Nenhum grupo criado ainda. Seja o primeiro!</span>';
+          return;
+        }
+        el.innerHTML = '';
+        data.groups.forEach(g => {
+          const chip = document.createElement('div');
+          chip.className = 'group-list-chip';
+          chip.title = 'Clique para preencher o nome automaticamente';
+          chip.innerHTML = `<span class="group-list-chip-name">👥 ${escapeHtml(g.name)}</span><span class="group-list-chip-count">${g.taskCount} task${g.taskCount !== 1 ? 's' : ''}</span>`;
+          chip.onclick = () => {
+            // Preenche o campo de nome e vai para a aba "Entrar"
+            switchGroupTab('join');
+            document.getElementById('group-join-name').value = g.name;
+            document.getElementById('group-join-password').focus();
+          };
+          el.appendChild(chip);
+        });
+      } catch(e) {
+        el.innerHTML = '<span class="group-list-empty">Não foi possível carregar grupos.</span>';
+      }
+    }
+
+    /* ── Sub-abas do grupo: Entrar ↔ Criar ───────────────────────── */
+    function switchGroupTab(tab) {
+      document.getElementById('tab-group-join').classList.toggle('active', tab === 'join');
+      document.getElementById('tab-group-create').classList.toggle('active', tab === 'create');
+      document.getElementById('group-join-panel').style.display   = tab === 'join'   ? 'flex' : 'none';
+      document.getElementById('group-create-panel').style.display = tab === 'create' ? 'flex' : 'none';
+    }
+
+    /* ── Toggle de senha nos campos de grupo ─────────────────────── */
+    function toggleGroupJoinPwd() {
+      const el = document.getElementById('group-join-password');
+      const btn = el.parentElement.querySelector('.pwd-toggle');
+      el.type = el.type === 'password' ? 'text' : 'password';
+      btn.textContent = el.type === 'password' ? '👁' : '🙈';
+    }
+    function toggleGroupCreatePwd() {
+      const el = document.getElementById('group-create-password');
+      const btn = el.parentElement.querySelector('.pwd-toggle');
+      el.type = el.type === 'password' ? 'text' : 'password';
+      btn.textContent = el.type === 'password' ? '👁' : '🙈';
+    }
+
+    /* ── Entrar num grupo ────────────────────────────────────────── */
+    async function handleGroupJoin() {
+      const name     = document.getElementById('group-join-name').value.trim();
+      const password = document.getElementById('group-join-password').value;
+      let valid = true;
+      if (!name || name.length < 3) { showFieldError('group-join-name', '⚠ Informe o nome do grupo (mín. 3 caracteres).'); valid = false; }
+      if (!password) { showFieldError('group-join-password', '⚠ Informe a senha do grupo.'); valid = false; }
+      if (!valid) return;
+
+      const btn = document.getElementById('group-join-btn');
+      btn.disabled = true; btn.textContent = 'Entrando...';
+      try {
+        const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'join', name, password }) });
+        const data = await res.json();
+        if (!res.ok) { showFieldError('group-join-name', '⚠ ' + (data.error || 'Erro.')); return; }
+        enterGroupMode(data.token, data.groupName);
+      } catch { showFieldError('group-join-name', '⚠ Erro de conexão. Tente novamente.'); }
+      finally { btn.disabled = false; btn.textContent = 'Entrar no Grupo →'; }
+    }
+
+    /* ── Criar um grupo (com confirmação de senha) ────────────────── */
+    async function handleGroupCreate() {
+      const name     = document.getElementById('group-create-name').value.trim();
+      const password = document.getElementById('group-create-password').value;
+      const confirm  = document.getElementById('group-create-confirm').value;
+      let valid = true;
+      if (!name || name.length < 3)    { showFieldError('group-create-name',    '⚠ Nome deve ter pelo menos 3 caracteres.'); valid = false; }
+      if (!password || password.length < 4) { showFieldError('group-create-password', '⚠ Senha deve ter pelo menos 4 caracteres.'); valid = false; }
+      if (password !== confirm)        { showFieldError('group-create-confirm', '⚠ As senhas não coincidem.'); valid = false; }
+      if (!valid) return;
+
+      const btn = document.getElementById('group-create-btn');
+      btn.disabled = true; btn.textContent = 'Criando...';
+      try {
+        const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', name, password }) });
+        const data = await res.json();
+        if (!res.ok) { showFieldError('group-create-name', '⚠ ' + (data.error || 'Erro.')); return; }
+        showToast(`Grupo "${data.groupName}" criado! ✦`, 'success');
+        loadGroupList(); // atualiza lista
+        enterGroupMode(data.token, data.groupName);
+      } catch { showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.'); }
+      finally { btn.disabled = false; btn.textContent = 'Criar Grupo ✦'; }
+    }
+
+    /* ── Ativa modo grupo ────────────────────────────────────────── */
+    function enterGroupMode(token, groupName) {
+      GROUP_TOKEN = token;
+      GROUP_NAME  = groupName;
+      localStorage.setItem('driftask_group_token', token);
+      localStorage.setItem('driftask_group_name',  groupName);
+
+      // Esconde tela de auth
+      document.getElementById('auth-screen').classList.add('hidden-auth');
+
+      // Mostra badge de grupo, esconde seletor de perfil
+      document.getElementById('group-header-badge').style.display = '';
+      document.getElementById('group-badge-name').textContent      = '👥 ' + groupName;
+      document.getElementById('profile-switcher').style.display    = 'none';
+
+      // Só esconde o chip de conta se o usuário NÃO tiver uma conta pessoal ativa
+      // (evita o bug do chip sumir após F5 quando o usuário está logado E em grupo)
+      const chip = document.getElementById('user-chip');
+      if (chip && !STATE.token) chip.style.display = 'none';
+
+      // Carrega tarefas do grupo e inicia polling
+      loadGroupTasks();
+      startGroupPolling();
+    }
+
+    /* ── Carrega tarefas do grupo do servidor ────────────────────── */
+    /* ── Hash leve do array de tarefas (detecta mudanças sem timestamps) ── */
+    function _hashTasks(tasks) {
+      return (tasks || []).map(t => t.id + '|' + t.col + '|' + (t.text||'').slice(0,20) + '|' + (t.priority||'')).join(',');
+    }
+
+    async function loadGroupTasks() {
+      try {
+        const res  = await fetch('/api/groups', { headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN } });
+        if (res.status === 401) { leaveGroup(); return; }
+        const data = await res.json();
+        if (data && Array.isArray(data.tasks)) {
+          STATE.tasks        = data.tasks;
+          STATE.profile      = 'grupo';
+          tasksLoaded        = true;
+          GROUP_LAST_UPDATED = _hashTasks(data.tasks); // guarda hash, não timestamp
+          scheduleRender(); updateStats();
+        }
+      } catch { /* sem conexão */ }
+    }
+
+    /* ── Salva tarefas do grupo no servidor ──────────────────────── */
+    async function saveGroupTasks() {
+      if (!GROUP_TOKEN) return;
+      const groupTasks = STATE.tasks.filter(t => t.profile === 'grupo');
+      try {
+        await fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROUP_TOKEN },
+          body: JSON.stringify({ action: 'save', tasks: groupTasks })
+        });
+        // Atualiza hash local — próximo poll ignora este save como "mudança externa"
+        GROUP_LAST_UPDATED = _hashTasks(groupTasks);
+      } catch { /* silencioso */ }
+    }
+
+    /* ── Polling a cada 3s: detecta mudanças de outros membros ──── */
+    function startGroupPolling() {
+      stopGroupPolling();
+      GROUP_POLL_ID = setInterval(async () => {
+        if (!GROUP_TOKEN) return stopGroupPolling();
+        try {
+          const res  = await fetch('/api/groups', { headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN } });
+          if (res.status === 401) { leaveGroup(); return; }
+          const data = await res.json();
+          if (!data || !Array.isArray(data.tasks)) return;
+
+          const serverHash = _hashTasks(data.tasks);
+          if (serverHash !== GROUP_LAST_UPDATED) {
+            GROUP_LAST_UPDATED = serverHash;
+            // Invalida cache de cards do grupo para re-render correto
+            data.tasks.forEach(t => _cardCache.delete(t.id));
+            STATE.tasks = [
+              ...STATE.tasks.filter(t => t.profile !== 'grupo'),
+              ...data.tasks
+            ];
+            scheduleRender(); updateStats();
+            showToast('Grupo atualizado ✦', 'success');
+          }
+        } catch { /* sem conexão */ }
+      }, GROUP_POLL_MS);
+    }
+
+    function stopGroupPolling() {
+      if (GROUP_POLL_ID) { clearInterval(GROUP_POLL_ID); GROUP_POLL_ID = null; }
+    }
+
+    /* ── Sair do grupo ───────────────────────────────────────────── */
+    function leaveGroup() {
+      stopGroupPolling();
+      GROUP_TOKEN = null; GROUP_NAME = null;
+      localStorage.removeItem('driftask_group_token');
+      localStorage.removeItem('driftask_group_name');
+      // Remove tarefas do grupo do STATE
+      STATE.tasks = STATE.tasks.filter(t => t.profile !== 'grupo');
+
+      // Restaura UI
+      document.getElementById('group-header-badge').style.display = 'none';
+      document.getElementById('profile-switcher').style.display   = '';
+
+      if (STATE.token) {
+        // Usuário tinha conta pessoal ativa — volta para ela
+        STATE.profile = 'pessoal';
+        scheduleRender(); updateStats();
+      } else {
+        // Sem conta — vai para tela de login
+        document.getElementById('auth-screen').classList.remove('hidden-auth');
+        const chip = document.getElementById('user-chip');
+        if (chip) chip.style.display = '';
+      }
+      showToast('Você saiu do grupo.', '');
+    }
+
+    /* ── Intercepta saveState para grupos ───────────────────────── */
+    // Quando em modo grupo, save vai para /api/groups em vez de /api/tasks
+    const _origSaveStateForGroup = saveState;
+    saveState = function() {
+      _origSaveStateForGroup();
+      if (GROUP_TOKEN && tasksLoaded) {
+        clearTimeout(debounceSyncTimeout);
+        debounceSyncTimeout = setTimeout(saveGroupTasks, 1200);
+      }
+    };
+
+    /* ── Restaura sessão de grupo ao recarregar ──────────────────── */
+    (function restoreGroupSession() {
+      const savedToken = localStorage.getItem('driftask_group_token');
+      const savedName  = localStorage.getItem('driftask_group_name');
+      if (savedToken && savedName) {
+        // Entra em modo grupo automaticamente após init
+        setTimeout(() => enterGroupMode(savedToken, savedName), 100);
+      }
+    })();
+
     init();
   </script>
   <!-- Dropdown do usuário fora do header para evitar transparência do backdrop-filter -->

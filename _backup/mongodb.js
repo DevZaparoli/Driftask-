@@ -35,6 +35,7 @@ export async function connectToDatabase() {
   // Índices garantidos na primeira conexão
   await db.collection('users').createIndex({ email: 1 }, { unique: true });
   await db.collection('tasks').createIndex({ userId: 1 });
+  await db.collection('groups').createIndex({ normalName: 1 }, { unique: true });
 
   cachedClient = client;
   cachedDb     = db;

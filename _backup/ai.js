@@ -1,26 +1,15 @@
-// api/ai.js  —  POST /api/ai
-// Proxy seguro: ANTHROPIC_API_KEY fica na variável de ambiente, nunca no browser
-// Body: { ping:true }  →  health check
-//       { system, message }  →  chat com Claude Haiku
+// api/ai.js  —  POST /api/ai  (powered by Groq — 100% gratuito)
+// { ping: true }              → health check
+// { system, messages: [...] } → conversa com histórico completo
 
-import jwt from 'jsonwebtoken';
-
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const JWT_SECRET    = process.env.JWT_SECRET;
-const MODEL         = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS    = 1024;
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const MODEL      = 'llama-3.3-70b-versatile'; // melhor modelo gratuito do Groq
+const MAX_TOKENS = 1024;
+const MAX_HIST   = 20; // últimas 20 trocas
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
   res.status(status).end(JSON.stringify(body));
-}
-
-function tryGetUser(req) {
-  try {
-    const auth = (req.headers['authorization'] || '').replace('Bearer ', '');
-    if (!auth || !JWT_SECRET) return null;
-    return jwt.verify(auth, JWT_SECRET);
-  } catch { return null; }
 }
 
 export default async function handler(req, res) {
@@ -30,53 +19,68 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return json(res, 405, { error: 'Método não permitido.' });
 
-  // ── Health check ──────────────────────────────────────────
+  // ── Health check ──────────────────────────────────────────────
   if (req.body?.ping) {
-    if (!ANTHROPIC_KEY) return json(res, 503, { ok: false, error: 'ANTHROPIC_API_KEY não configurada.' });
-    return json(res, 200, { ok: true, model: MODEL, provider: 'Anthropic Claude' });
+    if (!GROQ_KEY) return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
+    return json(res, 200, { ok: true, model: MODEL });
   }
 
-  // ── Chave obrigatória ─────────────────────────────────────
-  if (!ANTHROPIC_KEY) {
-    return json(res, 503, {
-      ok: false, fallback: true,
-      error: 'ANTHROPIC_API_KEY ausente. Configure nas variáveis de ambiente do Vercel.'
-    });
+  if (!GROQ_KEY) {
+    return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
   }
 
-  const { system, message } = req.body || {};
-  if (!message || typeof message !== 'string') {
-    return json(res, 400, { error: 'Campo "message" é obrigatório.' });
+  const { system, messages, message } = req.body || {};
+
+  // Aceita { messages:[...] } com histórico OU { message:'...' } legado
+  let history = [];
+  if (Array.isArray(messages) && messages.length > 0) {
+    history = messages
+      .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+      .map(m => ({ role: m.role, content: String(m.content).slice(0, 3000) }))
+      .slice(-(MAX_HIST * 2));
+  } else if (typeof message === 'string' && message.trim()) {
+    history = [{ role: 'user', content: message.slice(0, 3000) }];
+  } else {
+    return json(res, 400, { error: 'Envie "messages" (array) ou "message" (string).' });
   }
+
+  const systemMsg = system || 'Você é um assistente de produtividade integrado ao Driftask. Responda em português brasileiro de forma objetiva e útil.';
+
+  // Groq usa o mesmo formato da OpenAI (chat completions)
+  const payload = {
+    model:      MODEL,
+    max_tokens: MAX_TOKENS,
+    messages: [
+      { role: 'system', content: systemMsg },
+      ...history
+    ],
+  };
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:  'POST',
       headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${GROQ_KEY}`,
       },
-      body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
-        system:     system || 'Você é um assistente de produtividade. Responda em português brasileiro.',
-        messages:   [{ role: 'user', content: message.slice(0, 3000) }]
-      })
+      body: JSON.stringify(payload),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
-      console.error('[ai] Anthropic error:', JSON.stringify(data));
-      return json(res, 502, { error: data?.error?.message || 'Erro na API Anthropic.', fallback: true });
+      const errMsg = data?.error?.message || `Erro HTTP ${r.status}`;
+      console.error('[ai] Groq error:', errMsg);
+      return json(res, 502, { error: errMsg });
     }
 
-    const reply = data.content?.map(b => b.text || '').join('') || '';
+    const reply = data.choices?.[0]?.message?.content?.trim() || '';
+    if (!reply) return json(res, 502, { error: 'Resposta vazia do Groq.' });
+
     return json(res, 200, { ok: true, reply, model: MODEL });
 
   } catch (err) {
     console.error('[ai] fetch error:', err.message);
-    return json(res, 502, { error: 'Falha de conexão com Anthropic.', fallback: true });
+    return json(res, 502, { error: 'Falha de conexão: ' + err.message });
   }
 }

@@ -1,8 +1,11 @@
-
+{
   "version": 2,
   "outputDirectory": "public",
   "functions": {
-    "api/**/*.js": {
+    "api/ai.js": {
+      "maxDuration": 30
+    },
+    "api/*.js": {
       "maxDuration": 10
     }
   },
