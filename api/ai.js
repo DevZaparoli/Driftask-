@@ -1,11 +1,11 @@
-// api/ai.js  —  POST /api/ai  (powered by OpenAI)
+// api/ai.js  —  POST /api/ai  (powered by Groq — 100% gratuito)
 // { ping: true }              → health check
 // { system, messages: [...] } → conversa com histórico completo
 
-const OPENAI_KEY  = process.env.OPENAI_API_KEY;
-const MODEL       = 'gpt-4o-mini'; // rápido, barato, ótimo para produtividade
-const MAX_TOKENS  = 1024;
-const MAX_HISTORY = 20; // últimas 20 trocas (40 mensagens)
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const MODEL      = 'llama-3.3-70b-versatile'; // melhor modelo gratuito do Groq
+const MAX_TOKENS = 1024;
+const MAX_HIST   = 20; // últimas 20 trocas
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
@@ -21,13 +21,12 @@ export default async function handler(req, res) {
 
   // ── Health check ──────────────────────────────────────────────
   if (req.body?.ping) {
-    if (!OPENAI_KEY) return json(res, 503, { ok: false, error: 'OPENAI_API_KEY não configurada na Vercel.' });
+    if (!GROQ_KEY) return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
     return json(res, 200, { ok: true, model: MODEL });
   }
 
-  // ── Chave obrigatória ─────────────────────────────────────────
-  if (!OPENAI_KEY) {
-    return json(res, 503, { ok: false, error: 'OPENAI_API_KEY não configurada na Vercel.' });
+  if (!GROQ_KEY) {
+    return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
   }
 
   const { system, messages, message } = req.body || {};
@@ -38,45 +37,45 @@ export default async function handler(req, res) {
     history = messages
       .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .map(m => ({ role: m.role, content: String(m.content).slice(0, 3000) }))
-      .slice(-(MAX_HISTORY * 2));
+      .slice(-(MAX_HIST * 2));
   } else if (typeof message === 'string' && message.trim()) {
     history = [{ role: 'user', content: message.slice(0, 3000) }];
   } else {
     return json(res, 400, { error: 'Envie "messages" (array) ou "message" (string).' });
   }
 
-  // OpenAI: sistema vai como primeira mensagem com role "system"
   const systemMsg = system || 'Você é um assistente de produtividade integrado ao Driftask. Responda em português brasileiro de forma objetiva e útil.';
 
-  const openaiMessages = [
-    { role: 'system', content: systemMsg },
-    ...history
-  ];
+  // Groq usa o mesmo formato da OpenAI (chat completions)
+  const payload = {
+    model:      MODEL,
+    max_tokens: MAX_TOKENS,
+    messages: [
+      { role: 'system', content: systemMsg },
+      ...history
+    ],
+  };
 
   try {
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:  'POST',
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY}`,
+        'Authorization': `Bearer ${GROQ_KEY}`,
       },
-      body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
-        messages:   openaiMessages,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
       const errMsg = data?.error?.message || `Erro HTTP ${r.status}`;
-      console.error('[ai] OpenAI error:', errMsg);
+      console.error('[ai] Groq error:', errMsg);
       return json(res, 502, { error: errMsg });
     }
 
     const reply = data.choices?.[0]?.message?.content?.trim() || '';
-    if (!reply) return json(res, 502, { error: 'Resposta vazia da OpenAI.' });
+    if (!reply) return json(res, 502, { error: 'Resposta vazia do Groq.' });
 
     return json(res, 200, { ok: true, reply, model: MODEL });
 
