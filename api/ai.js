@@ -1,11 +1,11 @@
-// api/ai.js  —  POST /api/ai
+// api/ai.js  —  POST /api/ai  (powered by OpenAI)
 // { ping: true }              → health check
-// { system, messages: [...] } → conversa com histórico
+// { system, messages: [...] } → conversa com histórico completo
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL         = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS    = 1024;
-const MAX_HISTORY   = 20; // últimas 20 trocas (40 mensagens)
+const OPENAI_KEY  = process.env.OPENAI_API_KEY;
+const MODEL       = 'gpt-4o-mini'; // rápido, barato, ótimo para produtividade
+const MAX_TOKENS  = 1024;
+const MAX_HISTORY = 20; // últimas 20 trocas (40 mensagens)
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
@@ -21,13 +21,13 @@ export default async function handler(req, res) {
 
   // ── Health check ──────────────────────────────────────────────
   if (req.body?.ping) {
-    if (!ANTHROPIC_KEY) return json(res, 503, { ok: false, error: 'ANTHROPIC_API_KEY não configurada.' });
+    if (!OPENAI_KEY) return json(res, 503, { ok: false, error: 'OPENAI_API_KEY não configurada na Vercel.' });
     return json(res, 200, { ok: true, model: MODEL });
   }
 
   // ── Chave obrigatória ─────────────────────────────────────────
-  if (!ANTHROPIC_KEY) {
-    return json(res, 503, { ok: false, fallback: true, error: 'ANTHROPIC_API_KEY ausente.' });
+  if (!OPENAI_KEY) {
+    return json(res, 503, { ok: false, error: 'OPENAI_API_KEY não configurada na Vercel.' });
   }
 
   const { system, messages, message } = req.body || {};
@@ -45,43 +45,43 @@ export default async function handler(req, res) {
     return json(res, 400, { error: 'Envie "messages" (array) ou "message" (string).' });
   }
 
-  // API Anthropic exige: começa com 'user', alterna user/assistant
-  history = history.filter((m, i, a) => i === 0 || m.role !== a[i - 1].role);
-  if (history[0]?.role !== 'user') {
-    return json(res, 400, { error: 'O histórico deve começar com mensagem do usuário.' });
-  }
+  // OpenAI: sistema vai como primeira mensagem com role "system"
+  const systemMsg = system || 'Você é um assistente de produtividade integrado ao Driftask. Responda em português brasileiro de forma objetiva e útil.';
+
+  const openaiMessages = [
+    { role: 'system', content: systemMsg },
+    ...history
+  ];
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${OPENAI_KEY}`,
       },
       body: JSON.stringify({
         model:      MODEL,
         max_tokens: MAX_TOKENS,
-        system:     system || 'Você é um assistente de produtividade integrado ao Driftask. Responda em português brasileiro de forma objetiva e útil.',
-        messages:   history,
+        messages:   openaiMessages,
       }),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
-      const errMsg = data?.error?.message || `HTTP ${r.status}`;
-      console.error('[ai] Anthropic error:', errMsg);
-      return json(res, 502, { error: errMsg, fallback: false });
+      const errMsg = data?.error?.message || `Erro HTTP ${r.status}`;
+      console.error('[ai] OpenAI error:', errMsg);
+      return json(res, 502, { error: errMsg });
     }
 
-    const reply = (data.content || []).map(b => b.text || '').join('').trim();
-    if (!reply) return json(res, 502, { error: 'Resposta vazia da API.', fallback: false });
+    const reply = data.choices?.[0]?.message?.content?.trim() || '';
+    if (!reply) return json(res, 502, { error: 'Resposta vazia da OpenAI.' });
 
     return json(res, 200, { ok: true, reply, model: MODEL });
 
   } catch (err) {
     console.error('[ai] fetch error:', err.message);
-    return json(res, 502, { error: 'Falha de conexão: ' + err.message, fallback: false });
+    return json(res, 502, { error: 'Falha de conexão: ' + err.message });
   }
 }
