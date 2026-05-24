@@ -1860,75 +1860,75 @@
 
   <!-- Modal de confirmação destrutiva (limpar tarefas) -->
   <div class="confirm-overlay" id="confirm-overlay">
+    <!-- Wrapper: apenas este div é centralizado pelo overlay -->
+    <div id="modal-wrapper" style="width:100%;max-width:440px;padding:20px;box-sizing:border-box;">
 
-  <!-- ═══ MODAL: TOKEN DE ADMINISTRADOR (exibido após criar grupo) ═══ -->
-  <div class="admin-token-box" id="modal-admin-token" style="display:none;">
-    <div style="text-align:center;font-size:32px;">🔑</div>
-    <div class="admin-token-title">Token de Administrador do Grupo</div>
-    <div class="admin-token-warning">
-      ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele para excluir o grupo no futuro.
+    <!-- ═══ MODAL: TOKEN DE ADMINISTRADOR ═══ -->
+    <div class="admin-token-box" id="modal-admin-token" style="display:none;flex-direction:column;gap:14px;">
+      <div style="text-align:center;font-size:32px;">🔑</div>
+      <div class="admin-token-title">Token de Administrador do Grupo</div>
+      <div class="admin-token-warning">
+        ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele para excluir o grupo no futuro.
+      </div>
+      <div class="admin-token-value" id="admin-token-display" onclick="selectAdminToken()"></div>
+      <button class="admin-token-copy" onclick="copyAdminToken()">📋 Copiar Token</button>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;">Clique no token para selecionar · Após copiar, feche esta janela</div>
+      <button class="confirm-cancel" onclick="closeAdminTokenModal()">Entendi, já copiei ✓</button>
     </div>
-    <div class="admin-token-value" id="admin-token-display" onclick="selectAdminToken()"></div>
-    <button class="admin-token-copy" onclick="copyAdminToken()">📋 Copiar Token</button>
-    <div style="font-size:11px;color:var(--text-3);text-align:center;">Clique no token para selecionar · Após copiar, feche esta janela</div>
-    <button class="confirm-cancel" onclick="closeAdminTokenModal()">Entendi, já copiei ✓</button>
-  </div>
 
-  <!-- ═══ MODAL: EXCLUIR GRUPO ═══ -->
-  <div class="delete-group-box" id="modal-delete-group" style="display:none;">
-    <div style="text-align:center;font-size:28px;">🗑</div>
-    <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#ef4444;text-align:center;">Excluir Grupo</div>
-    <div style="font-size:13px;color:var(--text-2);line-height:1.6;text-align:center;">
-      Esta ação é <strong>permanente e irreversível</strong>. Todas as tarefas do grupo serão apagadas.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Nome do Grupo</label>
-      <input type="text" id="delete-group-name" class="delete-account-input"
-        placeholder="nome exato do grupo"
-        oninput="clearFieldError('delete-group-name')">
-      <div class="auth-field-error" id="delete-group-name-error"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Token de Administrador</label>
-      <input type="text" id="delete-group-token" class="delete-account-input"
-        placeholder="cole seu token de administrador aqui"
-        style="font-family:monospace;font-size:12px;"
-        oninput="clearFieldError('delete-group-token')">
-      <div class="auth-field-error" id="delete-group-token-error"></div>
-    </div>
-    <div class="confirm-actions">
-      <button class="confirm-cancel" onclick="closeDeleteGroupModal()">Cancelar</button>
-      <button class="confirm-delete" id="delete-group-btn" onclick="executeDeleteGroup()">Excluir Grupo</button>
-    </div>
-  </div>
-
-  <!-- ═══ MODAL: EXCLUIR CONTA ═══ -->
-  <div class="delete-account-box" id="modal-delete-account" style="display:none;">
-    <div class="delete-account-banner">
-      <div style="font-size:36px;">⛔</div>
-      <div class="delete-account-banner-title">EXCLUINDO CONTA DO DRIFTASK</div>
-      <div class="delete-account-banner-sub">
-        Você está prestes a <strong>excluir permanentemente</strong> sua conta e <strong>todas as suas tarefas</strong>.<br>
-        Esta ação <strong>não pode ser desfeita</strong>.
+    <!-- ═══ MODAL: EXCLUIR GRUPO ═══ -->
+    <div class="delete-group-box" id="modal-delete-group" style="display:none;flex-direction:column;gap:14px;">
+      <div style="text-align:center;font-size:28px;">🗑</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#ef4444;text-align:center;">Excluir Grupo</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.6;text-align:center;">
+        Esta ação é <strong>permanente e irreversível</strong>. Todas as tarefas do grupo serão apagadas.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Nome do Grupo</label>
+        <input type="text" id="delete-group-name" class="delete-account-input"
+          placeholder="nome exato do grupo"
+          oninput="clearFieldError('delete-group-name')">
+        <div class="auth-field-error" id="delete-group-name-error"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Token de Administrador</label>
+        <input type="text" id="delete-group-token" class="delete-account-input"
+          placeholder="cole seu token de administrador aqui"
+          style="font-family:monospace;font-size:12px;"
+          oninput="clearFieldError('delete-group-token')">
+        <div class="auth-field-error" id="delete-group-token-error"></div>
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" onclick="closeDeleteGroupModal()">Cancelar</button>
+        <button class="confirm-delete" id="delete-group-btn" onclick="executeDeleteGroup()">Excluir Grupo</button>
       </div>
     </div>
-    <div style="font-size:13px;color:var(--text-2);text-align:center;">
-      Para confirmar, digite sua senha atual:
-    </div>
-    <div style="position:relative;">
-      <input type="password" id="delete-account-password" class="delete-account-input"
-        placeholder="sua senha atual"
-        onkeydown="if(event.key==='Enter')executeDeleteAccount()">
-      <div class="auth-field-error" id="delete-account-error" style="margin-top:6px;"></div>
-    </div>
-    <button class="delete-account-confirm-btn" id="delete-account-btn" onclick="executeDeleteAccount()">
-      ⛔ SIM, EXCLUIR MINHA CONTA PERMANENTEMENTE
-    </button>
-    <button class="confirm-cancel" onclick="closeDeleteAccountModal()">Cancelar — não quero excluir</button>
-  </div>
 
-  <!-- ═══ MODAL: CONFIRMAÇÃO LIMPAR TAREFAS ═══ -->
-    <div class="confirm-box" id="modal-confirm-clear">
+    <!-- ═══ MODAL: EXCLUIR CONTA ═══ -->
+    <div class="delete-account-box" id="modal-delete-account" style="display:none;flex-direction:column;gap:14px;">
+      <div class="delete-account-banner">
+        <div style="font-size:36px;">⛔</div>
+        <div class="delete-account-banner-title">EXCLUINDO CONTA DO DRIFTASK</div>
+        <div class="delete-account-banner-sub">
+          Você está prestes a <strong>excluir permanentemente</strong> sua conta e <strong>todas as suas tarefas</strong>.<br>
+          Esta ação <strong>não pode ser desfeita</strong>.
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-2);text-align:center;">Para confirmar, digite sua senha atual:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <input type="password" id="delete-account-password" class="delete-account-input"
+          placeholder="sua senha atual"
+          onkeydown="if(event.key==='Enter')executeDeleteAccount()">
+        <div class="auth-field-error" id="delete-account-error"></div>
+      </div>
+      <button class="delete-account-confirm-btn" id="delete-account-btn" onclick="executeDeleteAccount()">
+        ⛔ SIM, EXCLUIR MINHA CONTA PERMANENTEMENTE
+      </button>
+      <button class="confirm-cancel" onclick="closeDeleteAccountModal()">Cancelar — não quero excluir</button>
+    </div>
+
+    <!-- ═══ MODAL: CONFIRMAÇÃO LIMPAR TAREFAS ═══ -->
+    <div class="confirm-box" id="modal-confirm-clear" style="display:none;">
       <div class="confirm-icon">🗑</div>
       <div class="confirm-title">Limpar tarefas</div>
       <div class="confirm-msg" id="confirm-msg">
@@ -1941,6 +1941,7 @@
       </div>
     </div>
 
+    </div><!-- /modal-wrapper -->
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -3307,6 +3308,9 @@
           if (el) el.style.display = m === id ? 'flex' : 'none';
         });
       document.getElementById('confirm-overlay').classList.add('open');
+      // Garante scroll para o topo do modal em telas pequenas
+      const wrapper = document.getElementById('modal-wrapper');
+      if (wrapper) wrapper.scrollTop = 0;
     }
     function _closeAllModals() {
       document.getElementById('confirm-overlay').classList.remove('open');
