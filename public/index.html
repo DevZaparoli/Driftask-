@@ -1188,41 +1188,92 @@
     }
 
     /* ─── OVERLAY DEDICADO: TOKEN DE ADMINISTRADOR ─── */
-    .admin-token-overlay {
-      position: fixed; inset: 0; z-index: 10001; /* acima de tudo */
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-      display: none; align-items: center; justify-content: center; padding: 20px;
-      opacity: 0; transition: opacity 0.25s;
+    @keyframes token-overlay-in  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes token-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes token-box-in {
+      0%   { opacity: 0; transform: scale(0.85) translateY(32px) rotate(-1deg); }
+      60%  { opacity: 1; transform: scale(1.03) translateY(-4px) rotate(0.3deg); }
+      80%  { transform: scale(0.98) translateY(2px); }
+      100% { transform: scale(1) translateY(0) rotate(0deg); }
     }
-    .admin-token-overlay.open { display: flex; opacity: 1; }
+    @keyframes token-box-out {
+      0%   { opacity: 1; transform: scale(1) translateY(0); }
+      100% { opacity: 0; transform: scale(0.88) translateY(24px); }
+    }
+    @keyframes token-shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes token-icon-bounce {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      25%      { transform: translateY(-8px) rotate(-8deg); }
+      75%      { transform: translateY(-4px) rotate(6deg); }
+    }
+    @keyframes token-glow-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+      50%      { box-shadow: 0 0 24px 4px rgba(16,185,129,0.25); }
+    }
+    .admin-token-overlay {
+      position: fixed; inset: 0; z-index: 10001;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .admin-token-overlay.entering {
+      display: flex;
+      animation: token-overlay-in 0.3s ease forwards;
+    }
+    .admin-token-overlay.entering .admin-token-box {
+      animation: token-box-in 0.55s cubic-bezier(0.34,1.4,0.64,1) forwards;
+    }
+    .admin-token-overlay.leaving {
+      display: flex;
+      animation: token-overlay-out 0.25s ease forwards;
+    }
+    .admin-token-overlay.leaving .admin-token-box {
+      animation: token-box-out 0.25s ease forwards;
+    }
     .admin-token-box {
-      background: var(--bg-sidebar); border: 1px solid rgba(16,185,129,0.35);
+      background: var(--bg-sidebar);
+      border: 1px solid rgba(16,185,129,0.4);
       border-radius: var(--radius-lg); padding: 28px 24px; width: 100%; max-width: 420px;
       display: flex; flex-direction: column; gap: 14px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-      transform: scale(0.93) translateY(10px);
-      transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(16,185,129,0.1);
+      animation: token-glow-pulse 3s ease-in-out infinite 0.6s;
     }
-    .confirm-overlay.open .admin-token-box { transform: scale(1) translateY(0); }
-    .admin-token-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: #10b981; text-align: center; }
+    .admin-token-icon-anim {
+      display: inline-block;
+      animation: token-icon-bounce 1.2s ease-in-out 0.5s 2;
+    }
+    .admin-token-title {
+      font-family: var(--font-display); font-size: 17px; font-weight: 800;
+      color: #10b981; text-align: center; letter-spacing: 0.01em;
+    }
     .admin-token-warning {
       background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
       border-radius: var(--radius-md); padding: 10px 12px;
       font-size: 12px; color: #f59e0b; line-height: 1.6;
     }
     .admin-token-value {
-      background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: var(--radius-md); padding: 12px 14px;
-      font-family: monospace; font-size: 12px; color: var(--text-1);
-      word-break: break-all; line-height: 1.7; letter-spacing: 0.04em;
-      user-select: all;
+      background: var(--bg-input); border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-md); padding: 14px;
+      font-family: monospace; font-size: 11.5px; color: #10b981;
+      word-break: break-all; line-height: 1.8; letter-spacing: 0.06em;
+      user-select: all; cursor: text;
+      background-image: linear-gradient(90deg,
+        transparent 0%, rgba(16,185,129,0.06) 50%, transparent 100%);
+      background-size: 200% auto;
+      animation: token-shimmer 3s linear infinite;
     }
     .admin-token-copy {
-      padding: 10px; border-radius: var(--radius-md); border: none;
-      background: #10b981; color: #fff; font-family: var(--font-display);
-      font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+      padding: 11px; border-radius: var(--radius-md); border: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; font-family: var(--font-display);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.4);
     }
-    .admin-token-copy:hover { opacity: 0.88; }
+    .admin-token-copy:hover  { opacity: 0.88; transform: translateY(-1px); }
+    .admin-token-copy:active { transform: scale(0.97); }
 
     /* ─── MODAL EXCLUIR CONTA ─── */
     .delete-account-box {
@@ -1360,7 +1411,8 @@
           <input type="text" id="auth-email" class="auth-input"
             placeholder="joao@email.com  ou  joao"
             autocomplete="username"
-            oninput="clearFieldError('auth-email')">
+            oninput="clearFieldError('auth-email')"
+            onkeydown="if(event.key==='Enter')handleAuthSubmit()">
         </div>
         <div class="auth-field-hint">💡 Você pode usar apenas a primeira parte do seu e-mail cadastrado</div>
         <div class="auth-field-error" id="auth-email-error"></div>
@@ -1373,7 +1425,8 @@
           <input type="email" id="auth-reg-email" class="auth-input"
             placeholder="seu@email.com"
             autocomplete="email"
-            oninput="validateRegEmail()">
+            oninput="validateRegEmail()"
+            onkeydown="if(event.key==='Enter')handleAuthSubmit()">
         </div>
         <div class="auth-field-hint">📧 Somente e-mails válidos são aceitos no cadastro</div>
         <div class="auth-field-error" id="auth-reg-email-error"></div>
@@ -1388,7 +1441,7 @@
             autocomplete="current-password"
             oninput="clearFieldError('auth-password')"
             onkeydown="if(event.key==='Enter')handleAuthSubmit()">
-          <button class="pwd-toggle" type="button" onclick="togglePwdVisibility()" title="Mostrar/ocultar senha">👁</button>
+          <button class="pwd-toggle" type="button" tabindex="-1" onclick="togglePwdVisibility()" title="Mostrar/ocultar senha">👁</button>
         </div>
         <div class="auth-field-error" id="auth-password-error"></div>
       </div>
@@ -1402,7 +1455,7 @@
             autocomplete="new-password"
             oninput="clearFieldError('auth-confirm-password')"
             onkeydown="if(event.key==='Enter')handleAuthSubmit()">
-          <button class="pwd-toggle" type="button" onclick="toggleConfirmVisibility()" title="Mostrar/ocultar senha">👁</button>
+          <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleConfirmVisibility()" title="Mostrar/ocultar senha">👁</button>
         </div>
         <div class="auth-field-error" id="auth-confirm-password-error"></div>
       </div>
@@ -1428,7 +1481,7 @@
             <input type="password" id="reset-new-password" class="auth-input"
               placeholder="mínimo 6 caracteres"
               onkeydown="if(event.key==='Enter')handleReset()">
-            <button class="pwd-toggle" type="button" onclick="toggleResetVisibility()" title="Mostrar/ocultar senha">👁</button>
+            <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleResetVisibility()" title="Mostrar/ocultar senha">👁</button>
           </div>
           <div class="auth-field-error" id="reset-new-password-error"></div>
         </div>
@@ -1497,7 +1550,7 @@
                 autocomplete="off"
                 oninput="clearFieldError('group-join-password')"
                 onkeydown="if(event.key==='Enter')handleGroupJoin()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
+              <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleGroupJoinPwd()">👁</button>
             </div>
             <div class="auth-field-error" id="group-join-password-error"></div>
           </div>
@@ -1528,7 +1581,7 @@
                 autocomplete="new-password"
                 oninput="clearFieldError('group-create-password')"
                 onkeydown="if(event.key==='Enter')handleGroupCreate()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
+              <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleGroupCreatePwd()">👁</button>
             </div>
             <div class="auth-field-error" id="group-create-password-error"></div>
           </div>
@@ -1943,10 +1996,10 @@
   <!-- Overlay dedicado para o Token de Admin — z-index 10001, acima de tudo -->
   <div class="admin-token-overlay" id="admin-token-overlay">
     <div class="admin-token-box" style="flex-direction:column;gap:14px;max-width:420px;width:100%;">
-      <div style="text-align:center;font-size:36px;">🔑</div>
+      <div style="text-align:center;font-size:36px;"><span class="admin-token-icon-anim">🔑</span></div>
       <div class="admin-token-title">Token de Administrador</div>
       <div style="text-align:center;font-size:13px;color:var(--text-2);">
-        Grupo: <strong id="admin-token-group-name"></strong>
+        Grupo: <strong id="admin-token-group-name" style="color:#10b981;"></strong>
       </div>
       <div class="admin-token-warning">
         ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele caso queira excluir o grupo no futuro.
@@ -3356,17 +3409,22 @@
       const nameEl = document.getElementById('admin-token-group-name');
       if (nameEl) nameEl.textContent = groupName || '';
       const overlay = document.getElementById('admin-token-overlay');
+      overlay.classList.remove('leaving');
       overlay.style.display = 'flex';
-      // Force reflow para a transição de opacity funcionar
+      // Força reflow para a animação começar do zero
       overlay.offsetHeight;
-      overlay.classList.add('open');
+      overlay.classList.add('entering');
     }
     function copyAdminToken() {
       if (!_pendingAdminToken) return;
       navigator.clipboard.writeText(_pendingAdminToken).then(() => {
         const btn = document.querySelector('.admin-token-copy');
         btn.textContent = '✅ Copiado!';
-        setTimeout(() => btn.textContent = '📋 Copiar Token', 2000);
+        btn.style.background = 'linear-gradient(135deg,#059669,#047857)';
+        setTimeout(() => {
+          btn.textContent = '📋 Copiar Token';
+          btn.style.background = '';
+        }, 2000);
       });
     }
     function selectAdminToken() {
@@ -3379,8 +3437,13 @@
     function closeAdminTokenModal() {
       _pendingAdminToken = null;
       const overlay = document.getElementById('admin-token-overlay');
-      overlay.classList.remove('open');
-      setTimeout(() => { overlay.style.display = 'none'; }, 250);
+      overlay.classList.remove('entering');
+      overlay.classList.add('leaving');
+      // Aguarda a animação de saída terminar antes de esconder
+      setTimeout(() => {
+        overlay.classList.remove('leaving');
+        overlay.style.display = 'none';
+      }, 260);
     }
 
     /* ── Excluir Grupo ── */
