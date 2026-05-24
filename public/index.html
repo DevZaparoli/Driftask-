@@ -248,10 +248,8 @@
 
     /* ── GRUPO: cor e layout próprios ─────────────────────────── */
     :root { --group-accent: #10b981; --group-accent-soft: rgba(16,185,129,0.12); --group-accent-glow: rgba(16,185,129,0.3); }
-    /* Caixa de auth no modo grupo — borda e linha superiores verdes */
-    #auth-box:has(#auth-panel-group[style*="flex"]) { border-color: rgba(16,185,129,0.35); }
+    /* Linha superior verde quando em modo grupo */
     #auth-box:has(#auth-panel-group[style*="flex"])::before { background: var(--group-accent); }
-    #auth-box:has(#auth-panel-group[style*="flex"]) { max-width: 680px; } /* mais largo para o painel duplo */
 
     .group-auth-icon {
       width: 52px; height: 52px; border-radius: 50%;
@@ -303,12 +301,15 @@
       .group-list-panel { width: 100%; }
       .group-list-items { flex-direction: row; flex-wrap: wrap; max-height: none; }
     }
-      display: flex; gap: 6px; background: var(--bg-btn);
+
+    /* Abas principais: Conta / Grupo */
+    .auth-tabs {
+      display: flex; gap: 4px; background: var(--bg-btn);
       border: 1px solid var(--border); border-radius: var(--radius-md);
-      padding: 4px;
+      padding: 3px;
     }
     .auth-tab {
-      flex: 1; padding: 8px 12px; border: none; border-radius: calc(var(--radius-md) - 2px);
+      flex: 1; padding: 8px 10px; border: none; border-radius: calc(var(--radius-md) - 2px);
       background: transparent; color: var(--text-3);
       font-family: var(--font-body); font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.2s; white-space: nowrap;
@@ -318,6 +319,50 @@
       background: var(--accent); color: #fff;
       box-shadow: 0 2px 8px var(--accent-glow);
     }
+    /* Aba grupo com cor verde quando ativa */
+    #tab-group.active { background: var(--group-accent); box-shadow: 0 2px 8px var(--group-accent-glow); }
+
+    /* Sub-abas dentro do painel de grupo: Entrar / Criar */
+    .group-sub-tabs {
+      display: flex; gap: 4px;
+      border-bottom: 1px solid var(--border); padding-bottom: 12px;
+    }
+    .group-sub-tab {
+      padding: 6px 16px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); background: transparent;
+      color: var(--text-3); font-family: var(--font-body);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .group-sub-tab:hover { color: var(--text-1); border-color: var(--border-hover); }
+    .group-sub-tab.active {
+      background: var(--group-accent-soft); color: var(--group-accent);
+      border-color: var(--group-accent-glow);
+    }
+
+    /* Lista de grupos existentes — aparece abaixo do form */
+    .group-list-section {
+      border-top: 1px solid var(--border); padding-top: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .group-list-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--group-accent);
+    }
+    .group-list-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      max-height: 100px; overflow-y: auto;
+    }
+    .group-list-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border-radius: 99px;
+      background: var(--group-accent-soft); border: 1px solid rgba(16,185,129,0.25);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .group-list-chip:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+    .group-list-chip-name { font-size: 12px; font-weight: 700; color: var(--text-1); }
+    .group-list-chip-count { font-size: 10px; color: var(--text-3); }
+    .group-list-loading { font-size: 12px; color: var(--text-3); }
+    .group-list-empty   { font-size: 12px; color: var(--text-3); font-style: italic; }
 
     /* Badge de grupo no header */
     .group-badge {
@@ -1327,101 +1372,99 @@
       </div><!-- /auth-panel-account -->
 
       <!-- Painel: Grupo Compartilhado -->
-      <div id="auth-panel-group" style="display:none;flex-direction:row;gap:20px;align-items:flex-start;">
+      <!-- Painel: Grupo Compartilhado — mesma largura e estilo do painel de conta -->
+      <div id="auth-panel-group" style="display:none;flex-direction:column;gap:16px;">
 
-        <!-- Lado esquerdo: formulário -->
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
-          <div class="auth-icon-wrap">
-            <div class="group-auth-icon">👥</div>
-            <div class="auth-title" style="color:var(--group-accent);">Grupo Compartilhado</div>
-            <div class="auth-subtitle">Kanban colaborativo em tempo real</div>
+        <!-- Header igual ao de conta, mas ícone verde -->
+        <div class="auth-icon-wrap">
+          <div class="auth-icon" style="background:var(--group-accent-soft);border-color:var(--group-accent-glow);">👥</div>
+          <div class="auth-title" style="color:var(--group-accent);">Grupo Compartilhado</div>
+          <div class="auth-subtitle">Kanban colaborativo em tempo real</div>
+        </div>
+
+        <!-- Sub-abas: Entrar / Criar (mesmo estilo das abas principais) -->
+        <div class="group-sub-tabs">
+          <button class="group-sub-tab active" id="tab-group-join" onclick="switchGroupTab('join')">Entrar no Grupo</button>
+          <button class="group-sub-tab" id="tab-group-create" onclick="switchGroupTab('create')">Criar Grupo</button>
+        </div>
+
+        <!-- Entrar no grupo -->
+        <div id="group-join-panel" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="auth-field">
+            <div class="auth-field-label">Nome do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="text" id="group-join-name" class="auth-input"
+                placeholder="ex: equipe-dev, Amazonas TI"
+                autocomplete="off"
+                oninput="clearFieldError('group-join-name')"
+                onkeydown="if(event.key==='Enter')handleGroupJoin()">
+            </div>
+            <div class="auth-field-error" id="group-join-name-error"></div>
           </div>
-
-          <!-- Sub-abas: Entrar / Criar -->
-          <div class="auth-tabs group-tabs">
-            <button class="auth-tab active" id="tab-group-join" onclick="switchGroupTab('join')">Entrar</button>
-            <button class="auth-tab" id="tab-group-create" onclick="switchGroupTab('create')">Criar</button>
+          <div class="auth-field">
+            <div class="auth-field-label">Senha do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-join-password" class="auth-input"
+                placeholder="••••••••"
+                autocomplete="off"
+                oninput="clearFieldError('group-join-password')"
+                onkeydown="if(event.key==='Enter')handleGroupJoin()">
+              <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
+            </div>
+            <div class="auth-field-error" id="group-join-password-error"></div>
           </div>
+          <button class="auth-submit-btn" id="group-join-btn"
+            style="background:var(--group-accent);box-shadow:0 4px 16px var(--group-accent-glow);"
+            onclick="handleGroupJoin()">Entrar no Grupo →</button>
+        </div>
 
-          <!-- Entrar no grupo -->
-          <div id="group-join-panel" style="display:flex;flex-direction:column;gap:10px;">
-            <div class="auth-field">
-              <div class="auth-field-label">Nome do Grupo</div>
-              <div class="auth-input-wrap">
-                <input type="text" id="group-join-name" class="auth-input group-input"
-                  placeholder="ex: equipe-dev"
-                  autocomplete="off"
-                  oninput="clearFieldError('group-join-name')"
-                  onkeydown="if(event.key==='Enter')handleGroupJoin()">
-              </div>
-              <div class="auth-field-error" id="group-join-name-error"></div>
+        <!-- Criar grupo -->
+        <div id="group-create-panel" style="display:none;flex-direction:column;gap:12px;">
+          <div class="auth-field">
+            <div class="auth-field-label">Nome do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="text" id="group-create-name" class="auth-input"
+                placeholder="ex: familia-souza"
+                autocomplete="off"
+                oninput="clearFieldError('group-create-name')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
             </div>
-            <div class="auth-field">
-              <div class="auth-field-label">Senha do Grupo</div>
-              <div class="auth-input-wrap">
-                <input type="password" id="group-join-password" class="auth-input group-input"
-                  placeholder="••••••••"
-                  autocomplete="off"
-                  oninput="clearFieldError('group-join-password')"
-                  onkeydown="if(event.key==='Enter')handleGroupJoin()">
-                <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
-              </div>
-              <div class="auth-field-error" id="group-join-password-error"></div>
-            </div>
-            <button class="auth-submit-btn group-submit-btn" id="group-join-btn" onclick="handleGroupJoin()">Entrar no Grupo →</button>
+            <div class="auth-field-error" id="group-create-name-error"></div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">⚠ O nome não pode ser alterado depois</div>
           </div>
-
-          <!-- Criar grupo -->
-          <div id="group-create-panel" style="display:none;flex-direction:column;gap:10px;">
-            <div class="auth-field">
-              <div class="auth-field-label">Nome do Grupo</div>
-              <div class="auth-input-wrap">
-                <input type="text" id="group-create-name" class="auth-input group-input"
-                  placeholder="ex: familia-souza"
-                  autocomplete="off"
-                  oninput="clearFieldError('group-create-name')"
-                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
-              </div>
-              <div class="auth-field-error" id="group-create-name-error"></div>
-              <div style="font-size:11px;color:var(--text-3);margin-top:3px;">⚠ Nome não pode ser alterado depois</div>
+          <div class="auth-field">
+            <div class="auth-field-label">Senha do Grupo</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-create-password" class="auth-input"
+                placeholder="mínimo 4 caracteres"
+                autocomplete="new-password"
+                oninput="clearFieldError('group-create-password')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
+              <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
             </div>
-            <div class="auth-field">
-              <div class="auth-field-label">Senha do Grupo</div>
-              <div class="auth-input-wrap">
-                <input type="password" id="group-create-password" class="auth-input group-input"
-                  placeholder="mínimo 4 caracteres"
-                  autocomplete="new-password"
-                  oninput="clearFieldError('group-create-password')"
-                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
-                <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
-              </div>
-              <div class="auth-field-error" id="group-create-password-error"></div>
-            </div>
-            <!-- NOVO: confirmar senha -->
-            <div class="auth-field">
-              <div class="auth-field-label">Confirmar Senha</div>
-              <div class="auth-input-wrap">
-                <input type="password" id="group-create-confirm" class="auth-input group-input"
-                  placeholder="repita a senha"
-                  autocomplete="new-password"
-                  oninput="clearFieldError('group-create-confirm')"
-                  onkeydown="if(event.key==='Enter')handleGroupCreate()">
-              </div>
-              <div class="auth-field-error" id="group-create-confirm-error"></div>
-            </div>
-            <button class="auth-submit-btn group-submit-btn" id="group-create-btn"
-              onclick="handleGroupCreate()">Criar Grupo ✦</button>
+            <div class="auth-field-error" id="group-create-password-error"></div>
           </div>
-        </div><!-- /lado esquerdo -->
+          <div class="auth-field">
+            <div class="auth-field-label">Confirmar Senha</div>
+            <div class="auth-input-wrap">
+              <input type="password" id="group-create-confirm" class="auth-input"
+                placeholder="repita a senha"
+                autocomplete="new-password"
+                oninput="clearFieldError('group-create-confirm')"
+                onkeydown="if(event.key==='Enter')handleGroupCreate()">
+            </div>
+            <div class="auth-field-error" id="group-create-confirm-error"></div>
+          </div>
+          <button class="auth-submit-btn" id="group-create-btn"
+            style="background:var(--group-accent);box-shadow:0 4px 16px var(--group-accent-glow);"
+            onclick="handleGroupCreate()">Criar Grupo ✦</button>
+        </div>
 
-        <!-- Divisor vertical -->
-        <div class="group-divider"></div>
-
-        <!-- Lado direito: grupos existentes -->
-        <div class="group-list-panel">
-          <div class="group-list-title">Grupos existentes</div>
-          <div id="group-list-items" class="group-list-items">
-            <div class="group-list-loading">⏳ Carregando...</div>
+        <!-- Lista de grupos existentes — chips abaixo do form -->
+        <div class="group-list-section">
+          <div class="group-list-title">👥 Grupos disponíveis — clique para entrar</div>
+          <div id="group-list-items" class="group-list-chips">
+            <span class="group-list-loading">⏳ Carregando...</span>
           </div>
         </div>
 
@@ -1859,6 +1902,23 @@
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)" />
       </div>
       <button class="sidebar-btn danger" onclick="confirmClear()">🗑 Limpar todas as tarefas</button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="setting-section">
+      <div class="setting-label">Conta</div>
+      <button class="sidebar-btn" id="sidebar-logout-btn"
+        style="display:none;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444;"
+        onclick="logoutUser();closeSidebar()">
+        🚪 Sair da conta
+      </button>
+      <button class="sidebar-btn" id="sidebar-group-leave-btn"
+        style="display:none;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#10b981;"
+        onclick="leaveGroup();closeSidebar()">
+        👥 Sair do grupo
+      </button>
+      <div id="sidebar-account-info" style="font-size:11px;color:var(--text-3);margin-top:4px;"></div>
     </div>
 
   </div>
@@ -3251,6 +3311,27 @@
       document.getElementById('sidebar-overlay').classList.add('open');
       buildAccentGrid(); buildColPresets();
       setTimeout(checkAIStatus, 300);
+      _updateSidebarAccount();
+    }
+    function _updateSidebarAccount() {
+      const logoutBtn  = document.getElementById('sidebar-logout-btn');
+      const groupBtn   = document.getElementById('sidebar-group-leave-btn');
+      const info       = document.getElementById('sidebar-account-info');
+      if (!logoutBtn) return;
+      // Mostra botão de sair do grupo se estiver em um grupo
+      if (GROUP_TOKEN && GROUP_NAME) {
+        groupBtn.style.display  = '';
+        logoutBtn.style.display = STATE.token ? '' : 'none';
+        if (info) info.textContent = `Grupo: ${GROUP_NAME}${STATE.email ? ' · ' + STATE.email : ''}`;
+      } else if (STATE.token) {
+        logoutBtn.style.display = '';
+        groupBtn.style.display  = 'none';
+        if (info) info.textContent = STATE.email || '';
+      } else {
+        logoutBtn.style.display = 'none';
+        groupBtn.style.display  = 'none';
+        if (info) info.textContent = 'Não conectado';
+      }
     }
     function closeSidebar() {
       document.getElementById('sidebar').classList.remove('open');
@@ -3633,39 +3714,41 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
     /* ── Abas auth: Conta ↔ Grupo ─────────────────────────────────── */
     function switchAuthTab(tab) {
       document.getElementById('tab-account').classList.toggle('active', tab === 'account');
-      document.getElementById('tab-group').classList.toggle('active', tab === 'group');
+      document.getElementById('tab-group').classList.toggle('active',   tab === 'group');
       document.getElementById('auth-panel-account').style.display = tab === 'account' ? '' : 'none';
       document.getElementById('auth-panel-group').style.display   = tab === 'group'   ? 'flex' : 'none';
-      if (tab === 'group') loadGroupList(); // carrega lista ao abrir aba
+      if (tab === 'group') loadGroupList(); // sempre recarrega ao abrir
     }
 
     /* ── Lista pública de grupos ──────────────────────────────────── */
     async function loadGroupList() {
       const el = document.getElementById('group-list-items');
       if (!el) return;
-      el.innerHTML = '<div class="group-list-loading">⏳ Carregando...</div>';
+      el.innerHTML = '<span class="group-list-loading">⏳ Carregando...</span>';
       try {
         const res  = await fetch('/api/groups');
+        if (!res.ok) throw new Error('Erro ' + res.status);
         const data = await res.json();
         if (!data.groups || data.groups.length === 0) {
-          el.innerHTML = '<div class="group-list-empty">Nenhum grupo criado ainda.</div>';
+          el.innerHTML = '<span class="group-list-empty">Nenhum grupo criado ainda. Seja o primeiro!</span>';
           return;
         }
         el.innerHTML = '';
         data.groups.forEach(g => {
-          const item = document.createElement('div');
-          item.className = 'group-list-item';
-          item.title = 'Clique para preencher o nome';
-          item.innerHTML = `<div class="group-list-item-name">👥 ${escapeHtml(g.name)}</div><div class="group-list-item-count">${g.taskCount} tarefa${g.taskCount !== 1 ? 's' : ''}</div>`;
-          item.onclick = () => {
-            document.getElementById('group-join-name').value = g.name;
+          const chip = document.createElement('div');
+          chip.className = 'group-list-chip';
+          chip.title = 'Clique para preencher o nome automaticamente';
+          chip.innerHTML = `<span class="group-list-chip-name">👥 ${escapeHtml(g.name)}</span><span class="group-list-chip-count">${g.taskCount} task${g.taskCount !== 1 ? 's' : ''}</span>`;
+          chip.onclick = () => {
+            // Preenche o campo de nome e vai para a aba "Entrar"
             switchGroupTab('join');
+            document.getElementById('group-join-name').value = g.name;
             document.getElementById('group-join-password').focus();
           };
-          el.appendChild(item);
+          el.appendChild(chip);
         });
-      } catch {
-        el.innerHTML = '<div class="group-list-empty">Erro ao carregar grupos.</div>';
+      } catch(e) {
+        el.innerHTML = '<span class="group-list-empty">Não foi possível carregar grupos.</span>';
       }
     }
 
@@ -3750,9 +3833,10 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       document.getElementById('group-badge-name').textContent      = '👥 ' + groupName;
       document.getElementById('profile-switcher').style.display    = 'none';
 
-      // Esconde chip de usuário pessoal
+      // Só esconde o chip de conta se o usuário NÃO tiver uma conta pessoal ativa
+      // (evita o bug do chip sumir após F5 quando o usuário está logado E em grupo)
       const chip = document.getElementById('user-chip');
-      if (chip) chip.style.display = 'none';
+      if (chip && !STATE.token) chip.style.display = 'none';
 
       // Carrega tarefas do grupo e inicia polling
       loadGroupTasks();
