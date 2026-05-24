@@ -1700,8 +1700,8 @@
       <!-- Mensagens -->
       <div class="ai-messages" id="ai-messages">
         <div class="ai-msg bot">
-          Olá! Sou seu assistente de produtividade powered by <strong>LLaMA 3.3 70B (Groq)</strong>.
-          Posso analisar suas tarefas, sugerir prioridades e adicionar itens ao board com um clique! 🚀
+          Olá! Sou sua IA assistente powered by <strong>LLaMA 3.3 70B (Groq)</strong>.
+          Posso responder qualquer pergunta — programação, dúvidas gerais, criatividade — e também analisar suas tarefas do board. 🚀
         </div>
       </div>
 
@@ -3371,13 +3371,20 @@
     ══════════════════════════════════════════════════════════ */
 
     async function checkAIStatus() {
-      const box  = document.getElementById('ai-status-box');
-      const icon = document.getElementById('ai-status-icon');
-      const msg  = document.getElementById('ai-status-msg');
+      const box   = document.getElementById('ai-status-box');
+      const icon  = document.getElementById('ai-status-icon');
+      const msg   = document.getElementById('ai-status-msg');
+      const label = document.getElementById('ai-status-label');
+      const dot   = document.getElementById('ai-status-dot');
       if (!box) return;
+
+      // Estado: verificando
+      if (label) label.textContent = 'verificando...';
+      if (dot)   dot.style.background = '#f59e0b';
       icon.textContent = '⏳';
       msg.innerHTML = '<span style="color:var(--text-3)">Verificando conexão...</span>';
       box.style.borderColor = 'var(--border)';
+
       try {
         const res  = await fetch('/api/ai', {
           method:  'POST',
@@ -3386,20 +3393,26 @@
         });
         const data = await res.json();
         if (data.ok) {
+          // Estado: ativa
+          if (label) label.textContent = 'ativa';
+          if (dot)   dot.style.background = '#10b981';
           icon.textContent = '✅';
           msg.innerHTML = `
             <strong style="color:#10b981">IA ativa</strong> · LLaMA 3.3 70B<br>
             <span style="font-size:10px;color:var(--text-3)">Assistente pronto para uso ✓</span>`;
           box.style.borderColor = 'rgba(16,185,129,0.4)';
         } else {
-          throw new Error('sem chave');
+          throw new Error(data.error || 'sem chave');
         }
-      } catch {
+      } catch(e) {
+        // Estado: erro
+        if (label) label.textContent = 'offline';
+        if (dot)   dot.style.background = '#ef4444';
         icon.textContent = '⚠️';
         msg.innerHTML = `
           <strong style="color:#f59e0b">IA não configurada</strong><br>
           <span style="font-size:10px;color:var(--text-3)">
-            Contate o administrador para ativar o assistente.
+            Verifique se GROQ_API_KEY está configurada na Vercel.
           </span>`;
         box.style.borderColor = 'rgba(245,158,11,0.35)';
       }
@@ -3414,11 +3427,22 @@
         `- [${(t.priority||'medium').toUpperCase()}] ${t.text}${t.due ? ` (vence: ${t.due})` : ''}`
       ).join('\n');
       const profileLabel = STATE.profile === 'profissional' ? 'profissional' : 'pessoal';
-      const system = `Você é um assistente de produtividade integrado ao Driftask (app kanban). Perfil: "${profileLabel}", coluna: "${colName}".
-Tarefas atuais (máx 12):
-${taskList || 'Nenhuma tarefa ainda.'}
-Responda em português brasileiro, de forma objetiva. Máx 3 parágrafos curtos.
-Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário poderá adicioná-las com um clique.`;
+
+      // Contexto das tarefas — incluído apenas se o usuário tiver tarefas
+      const system = `Você é uma IA assistente de uso geral. Responda qualquer pergunta do usuário sobre qualquer assunto: programação, ciências, clima, culinária, matemática, história, criatividade, etc.
+
+REGRA PRINCIPAL: Nunca recuse responder dizendo que só fala sobre tarefas. Você é uma IA completa.
+
+Idioma: sempre português brasileiro.
+Formato: direto e claro, sem exageros.
+
+${taskList ? `Contexto adicional do Driftask (use APENAS se o usuário perguntar sobre suas tarefas ou produtividade, ignore para outros assuntos):
+- Perfil: ${profileLabel} | Coluna: ${colName}
+- Tarefas: 
+${taskList}
+
+Para sugerir novas tarefas ao kanban, inicie a linha com "TAREFA:" e o usuário poderá adicioná-las com um clique.` : ''}`;
+
       return { system, relTasks, profileLabel, colName };
     }
 
