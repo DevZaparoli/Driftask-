@@ -4120,7 +4120,9 @@ Para sugerir novas tarefas ao kanban, inicie a linha com "TAREFA:" e o usuário 
         if (!res.ok) { showFieldError('group-create-name', '⚠ ' + (data.error || 'Erro.')); return; }
         enterGroupMode(data.token, data.groupName);
         loadGroupList();
-        if (data.adminToken) showAdminTokenModal(data.adminToken, data.groupName);
+        // Mostra o modal sempre — se adminToken vier undefined, exibe aviso de redeploy
+        const tokenToShow = data.adminToken || 'TOKEN_NAO_RETORNADO — atualize api/groups.js e faça o deploy novamente';
+        showAdminTokenModal(tokenToShow, data.groupName);
       } catch { showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.'); }
       finally { btn.disabled = false; btn.textContent = 'Criar Grupo ✦'; }
     }
