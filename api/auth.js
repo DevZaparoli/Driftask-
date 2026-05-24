@@ -40,8 +40,8 @@ export default async function handler(req, res) {
   if (!action) {
     return json(res, 400, { error: 'Campo action é obrigatório.' });
   }
-  // reset-password não usa o campo password (usa newPassword)
-  if (action !== 'reset-password' && !password) {
+  // reset-password e delete-account têm validação própria de password
+  if (action !== 'reset-password' && action !== 'delete-account' && !password) {
     return json(res, 400, { error: 'Campos obrigatórios não enviados.' });
   }
 
@@ -161,6 +161,30 @@ export default async function handler(req, res) {
     const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await users.updateOne({ _id: user._id }, { $set: { password: hash, updatedAt: new Date() } });
     return json(res, 200, { ok: true, message: 'Senha redefinida com sucesso.' });
+  }
+
+  // ══════════════════════════════════════════
+  //  EXCLUIR CONTA
+  // ══════════════════════════════════════════
+  if (action === 'delete-account') {
+    const auth = req.headers['authorization'] || '';
+    if (!auth.startsWith('Bearer ')) return json(res, 401, { error: 'Autenticação necessária.' });
+    let decoded;
+    try { decoded = jwt.verify(auth.slice(7), JWT_SECRET); }
+    catch { return json(res, 401, { error: 'Sessão inválida ou expirada.' }); }
+
+    if (!password) return json(res, 400, { error: 'Confirme sua senha para excluir a conta.' });
+
+    const user = await users.findOne({ email: decoded.email });
+    if (!user) return json(res, 404, { error: 'Conta não encontrada.' });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return json(res, 401, { error: 'Senha incorreta. Tente novamente.' });
+
+    await users.deleteOne({ _id: user._id });
+    await db.collection('tasks').deleteMany({ userId: user._id.toString() });
+
+    return json(res, 200, { ok: true, message: 'Conta excluída permanentemente.' });
   }
 
   return json(res, 400, { error: `Ação desconhecida: "${action}".` });
