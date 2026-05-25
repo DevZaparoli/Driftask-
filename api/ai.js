@@ -2,8 +2,8 @@
 // { ping: true }              → health check
 // { system, messages: [...] } → conversa com histórico completo
 
-const GROQ_KEY   = process.env.GROQ_API_KEY;
-const MODEL      = 'llama-3.3-70b-versatile'; // melhor modelo gratuito do Groq
+const GROQ_KEY   = process.env.GEMINInv_API_KEY;
+const MODEL      = 'google/gemma-4-31-b-it'; // melhor modelo gratuito do Groq
 const MAX_TOKENS = 1024;
 const MAX_HIST   = 20; // últimas 20 trocas
 
