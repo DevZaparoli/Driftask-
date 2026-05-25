@@ -1,11 +1,11 @@
-// api/ai.js  —  POST /api/ai  (powered by Groq — 100% gratuito)
+// api/ai.js  —  POST /api/ai  (powered by NVIDIA NIM — Gemma 4 31B)
 // { ping: true }              → health check
 // { system, messages: [...] } → conversa com histórico completo
 
-const GROQ_KEY   = process.env.GEMINInv_API_KEY;
-const MODEL      = 'google/gemma-4-31-b-it'; // melhor modelo gratuito do Groq
+const NVIDIA_KEY = process.env.NVIDIA_API_KEY;
+const MODEL      = 'google/gemma-4-31b-it';
 const MAX_TOKENS = 1024;
-const MAX_HIST   = 20; // últimas 20 trocas
+const MAX_HIST   = 20;
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
@@ -21,17 +21,16 @@ export default async function handler(req, res) {
 
   // ── Health check ──────────────────────────────────────────────
   if (req.body?.ping) {
-    if (!GROQ_KEY) return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
+    if (!NVIDIA_KEY) return json(res, 503, { ok: false, error: 'NVIDIA_API_KEY não configurada na Vercel.' });
     return json(res, 200, { ok: true, model: MODEL });
   }
 
-  if (!GROQ_KEY) {
-    return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
+  if (!NVIDIA_KEY) {
+    return json(res, 503, { ok: false, error: 'NVIDIA_API_KEY não configurada na Vercel.' });
   }
 
   const { system, messages, message } = req.body || {};
 
-  // Aceita { messages:[...] } com histórico OU { message:'...' } legado
   let history = [];
   if (Array.isArray(messages) && messages.length > 0) {
     history = messages
@@ -44,38 +43,35 @@ export default async function handler(req, res) {
     return json(res, 400, { error: 'Envie "messages" (array) ou "message" (string).' });
   }
 
-  const systemMsg = system || 'Você é um assistente de produtividade integrado ao Driftask. Responda em português brasileiro de forma objetiva e útil.';
-
-  // Groq usa o mesmo formato da OpenAI (chat completions)
-  const payload = {
-    model:      MODEL,
-    max_tokens: MAX_TOKENS,
-    messages: [
-      { role: 'system', content: systemMsg },
-      ...history
-    ],
-  };
+  const systemMsg = system || 'Você é uma IA assistente de uso geral integrada ao Driftask. Responda qualquer pergunta em português brasileiro de forma clara e útil.';
 
   try {
     const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method:  'POST',
+      method: 'POST',
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${GROQ_KEY}`,
+        'Authorization': `Bearer ${NVIDIA_KEY}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        model:      MODEL,
+        max_tokens: MAX_TOKENS,
+        messages: [
+          { role: 'system', content: systemMsg },
+          ...history
+        ],
+      }),
     });
 
     const data = await r.json();
 
     if (!r.ok) {
       const errMsg = data?.error?.message || `Erro HTTP ${r.status}`;
-      console.error('[ai] Groq error:', errMsg);
+      console.error('[ai] NVIDIA NIM error:', errMsg);
       return json(res, 502, { error: errMsg });
     }
 
     const reply = data.choices?.[0]?.message?.content?.trim() || '';
-    if (!reply) return json(res, 502, { error: 'Resposta vazia do Groq.' });
+    if (!reply) return json(res, 502, { error: 'Resposta vazia da NVIDIA NIM.' });
 
     return json(res, 200, { ok: true, reply, model: MODEL });
 
