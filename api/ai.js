@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method:  'POST',
       headers: {
         'Content-Type':  'application/json',
