@@ -1802,7 +1802,7 @@
           Assistente IA
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <div class="ai-powered-by">Google - Gemini</div>
+          <div class="ai-powered-by">NVIDIA · Gemma</div>
           <div class="ai-popup-close" onclick="closeAI()">✕</div>
         </div>
       </div>
@@ -1837,7 +1837,7 @@
       <!-- Mensagens -->
       <div class="ai-messages" id="ai-messages">
         <div class="ai-msg bot">
-          Olá! Sou sua IA assistente powered by <strong>Gemini (google/gemma-4-31 b-it)</strong>.
+          Olá! Sou sua IA assistente powered by <strong>Gemma 4 31B (NVIDIA NIM)</strong>.
           Posso responder qualquer pergunta — programação, dúvidas gerais, criatividade — e também analisar suas tarefas do board. 🚀
         </div>
       </div>
@@ -2088,7 +2088,7 @@
           background:rgba(139,92,246,0.15);color:#a78bfa;
           border:1px solid rgba(139,92,246,0.3);
           padding:2px 7px;border-radius:99px;margin-left:6px;text-transform:uppercase;">
-          Groq · LLaMA
+          NVIDIA · Gemma
         </span>
       </div>
 
@@ -3747,8 +3747,8 @@
         if (data.ok) {
           icon.textContent = '✅';
           msg.innerHTML = `
-            <strong style="color:#10b981">IA ativa</strong> · LLaMA 3.3 70B<br>
-            <span style="font-size:10px;color:var(--text-3)">Assistente pronto para uso ✓</span>`;
+            <strong style="color:#10b981">IA ativa</strong> · Gemma 4 31B<br>
+            <span style="font-size:10px;color:var(--text-3)">Gemma 4 31B pronto ✓</span>`;
           box.style.borderColor = 'rgba(16,185,129,0.4)';
         } else {
           throw new Error(data.error || 'sem chave');
@@ -3758,7 +3758,7 @@
         msg.innerHTML = `
           <strong style="color:#f59e0b">IA não configurada</strong><br>
           <span style="font-size:10px;color:var(--text-3)">
-            Verifique se GROQ_API_KEY está configurada na Vercel.
+            Verifique se NVIDIA_API_KEY está configurada na Vercel.
           </span>`;
         box.style.borderColor = 'rgba(245,158,11,0.35)';
       }
