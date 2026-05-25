@@ -2,8 +2,8 @@
 // { ping: true }              → health check
 // { system, messages: [...] } → conversa com histórico completo
 
-const NVIDIA_KEY = process.env.NVIDIA_API_KEY;
-const MODEL      = 'google/gemma-4-31b-it';
+const NVIDIA_KEY = process.env.GROQ_API_KEY;
+const MODEL      = 'llama-3.3-70b-versatile';
 const MAX_TOKENS = 1024;
 const MAX_HIST   = 20;
 
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   const systemMsg = system || 'Você é uma IA assistente de uso geral integrada ao Driftask. Responda qualquer pergunta em português brasileiro de forma clara e útil.';
 
   try {
-    const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',
