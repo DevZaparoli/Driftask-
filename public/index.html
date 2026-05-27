@@ -1202,6 +1202,57 @@
       box-shadow: 0 0 0 2px var(--accent);
     }
 
+    /* ─── SORT BAR ─── */
+    .sort-bar {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 8px 14px;
+      margin-bottom: 10px; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      flex-wrap: wrap;
+    }
+    .sort-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-3);
+      white-space: nowrap; margin-right: 2px;
+    }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 99px;
+      border: 1px solid var(--border); background: transparent;
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: var(--text-3); cursor: pointer;
+      transition: all 0.15s; white-space: nowrap; line-height: 1.4;
+    }
+    .sort-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .sort-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+    /* ─── TAG FILTER BAR ─── */
+    .tag-filter-bar {
+      display: none; align-items: center; gap: 8px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 8px 14px;
+      margin-bottom: 10px; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      flex-wrap: wrap; animation: page-in 0.25s ease both;
+    }
+    .tag-filter-bar.show { display: flex; }
+    .tag-filter-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-3);
+      white-space: nowrap;
+    }
+    .tag-filter-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--accent-soft); border: 1px solid rgba(var(--accent-rgb),0.3);
+      color: var(--accent); border-radius: 99px;
+      padding: 3px 10px; font-size: 11px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .tag-filter-chip-close {
+      cursor: pointer; font-size: 10px; opacity: 0.7;
+      transition: opacity 0.15s, transform 0.15s; line-height: 1;
+    }
+    .tag-filter-chip-close:hover { opacity: 1; transform: scale(1.2); }
+
     /* ─── MODAL DE CONFIRMAÇÃO DESTRUTIVA ─── */
     .confirm-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.6);
