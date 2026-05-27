@@ -544,12 +544,74 @@
       margin: 4px 0;
     }
 
+    /* ─── SORT BAR ─── */
+    .sort-bar {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 8px 14px;
+      margin-bottom: 10px; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      flex-wrap: wrap;
+    }
+    .sort-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-3);
+      white-space: nowrap; margin-right: 2px;
+    }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 99px;
+      border: 1px solid var(--border); background: transparent;
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: var(--text-3); cursor: pointer;
+      transition: all 0.15s; white-space: nowrap; line-height: 1.4;
+    }
+    .sort-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .sort-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+    /* ─── TAG FILTER BAR ─── */
+    .tag-filter-bar {
+      display: none; align-items: center; gap: 8px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 8px 14px;
+      margin-bottom: 10px; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      flex-wrap: wrap;
+    }
+    .tag-filter-bar.show { display: flex; animation: page-in 0.2s ease both; }
+    .tag-filter-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-3); white-space: nowrap;
+    }
+    .tag-filter-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--accent-soft); border: 1px solid rgba(var(--accent-rgb),0.3);
+      color: var(--accent); border-radius: 99px;
+      padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .tag-filter-chip-close {
+      cursor: pointer; font-size: 10px; opacity: 0.7;
+      transition: opacity 0.15s, transform 0.15s; line-height: 1;
+    }
+    .tag-filter-chip-close:hover { opacity: 1; transform: scale(1.25); }
+
+    /* ─── CARD TAGS ─── */
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .card-tag {
+      display: inline-flex; padding: 1px 7px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 99px; font-size: 10px; font-weight: 600;
+      color: var(--text-3); cursor: pointer;
+      transition: all 0.15s; white-space: nowrap; user-select: none;
+    }
+    .card-tag:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+    .layout-compact .card-tags { display: none; }
+
     /* ─── ANIMAÇÕES DE PÁGINA ─── */
     @keyframes page-in { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-    header   { animation: page-in 0.4s 0.00s cubic-bezier(0.34,1.2,0.64,1) both; }
+    header     { animation: page-in 0.4s 0.00s cubic-bezier(0.34,1.2,0.64,1) both; }
     .clock-bar { animation: page-in 0.4s 0.07s cubic-bezier(0.34,1.2,0.64,1) both; }
     .add-bar   { animation: page-in 0.4s 0.12s cubic-bezier(0.34,1.2,0.64,1) both; }
     .search-bar{ animation: page-in 0.4s 0.17s cubic-bezier(0.34,1.2,0.64,1) both; }
+    .sort-bar  { animation: page-in 0.4s 0.19s cubic-bezier(0.34,1.2,0.64,1) both; }
     #col-todo  { animation: page-in 0.5s 0.22s cubic-bezier(0.34,1.3,0.64,1) both; }
     #col-doing { animation: page-in 0.5s 0.32s cubic-bezier(0.34,1.3,0.64,1) both; }
     #col-done  { animation: page-in 0.5s 0.42s cubic-bezier(0.34,1.3,0.64,1) both; }
@@ -1731,6 +1793,19 @@
       <span class="search-count" id="search-count"></span>
     </div>
 
+    <div class="sort-bar" id="sort-bar">
+      <span class="sort-label">Ordenar:</span>
+      <button class="sort-btn active" id="sort-date"     onclick="setSortBy('date')">📅 Data</button>
+      <button class="sort-btn"        id="sort-priority" onclick="setSortBy('priority')">🎯 Prioridade</button>
+      <button class="sort-btn"        id="sort-due"      onclick="setSortBy('due')">⏰ Vencimento</button>
+      <button class="sort-btn"        id="sort-alpha"    onclick="setSortBy('alpha')">🔤 A-Z</button>
+      <button class="sort-btn"        id="sort-starred"  onclick="setSortBy('starred')">★ Destaque</button>
+      <div style="flex:1;min-width:8px;"></div>
+      <button class="sort-btn" id="sort-dir-btn" onclick="toggleSortDir()" title="Inverter ordem de classificação">↓ Padrão</button>
+    </div>
+
+    <div class="tag-filter-bar" id="tag-filter-bar"></div>
+
     <div class="board" id="board">
 
       <div class="column col-todo" id="col-todo"
@@ -1890,6 +1965,12 @@
           <option value="doing">Em Andamento</option>
           <option value="done">Concluído</option>
         </select>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Etiquetas <span style="font-size:10px;color:var(--text-3);">(separe por vírgula · clique numa tag no card para filtrar)</span></div>
+        <input type="text" class="modal-input" id="edit-tags" maxlength="200"
+          placeholder="ex: cliente, reunião, urgente"
+          autocomplete="off" style="font-size:13px;" />
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeEdit()">Cancelar</button>
@@ -2172,6 +2253,9 @@
     let SEARCH_QUERY = '';
     let FILTER_PRIO  = '';
     let FILTER_COL   = '';
+    let FILTER_TAGS  = [];
+    let SORT_BY      = 'date';   // 'date' | 'priority' | 'due' | 'alpha' | 'starred'
+    let SORT_DIR     = 'desc';   // 'desc' | 'asc'
     let editingId    = null;
     let dragTaskId   = null;
     let authMode     = 'login';
@@ -2809,13 +2893,102 @@
     function matchesFilters(task) {
       if (task.profile !== STATE.profile) return false;
       if (FILTER_COL && task.col !== FILTER_COL) return false;
-      if (FILTER_COL && task.col !== FILTER_COL) return false;
       if (FILTER_PRIO && (task.priority || 'medium') !== FILTER_PRIO) return false;
+      if (FILTER_TAGS.length > 0) {
+        const taskTags = task.tags || [];
+        if (!FILTER_TAGS.some(ft => taskTags.includes(ft))) return false;
+      }
       if (SEARCH_QUERY) {
-        const hay = (task.text + ' ' + (task.notes || '')).toLowerCase();
+        const hay = (task.text + ' ' + (task.notes || '') + ' ' + (task.tags || []).join(' ')).toLowerCase();
         if (!hay.includes(SEARCH_QUERY)) return false;
       }
       return true;
+    }
+
+    /* ─── SORT ─── */
+    function setSortBy(by) {
+      SORT_BY = by;
+      updateSortBtns();
+      STATE.pages = { todo:1, doing:1, done:1 };
+      scheduleRender();
+    }
+    function toggleSortDir() {
+      SORT_DIR = SORT_DIR === 'desc' ? 'asc' : 'desc';
+      updateSortDirBtn();
+      STATE.pages = { todo:1, doing:1, done:1 };
+      scheduleRender();
+    }
+    function updateSortBtns() {
+      ['date','priority','due','alpha','starred'].forEach(id => {
+        document.getElementById('sort-' + id)?.classList.toggle('active', id === SORT_BY);
+      });
+      updateSortDirBtn();
+    }
+    function updateSortDirBtn() {
+      const btn = document.getElementById('sort-dir-btn');
+      if (!btn) return;
+      btn.textContent = SORT_DIR === 'desc' ? '↓ Padrão' : '↑ Invertido';
+      btn.classList.toggle('active', SORT_DIR === 'asc');
+    }
+    function _sortTasks(tasks) {
+      const PRIO = { high: 2, medium: 1, low: 0 };
+      return [...tasks].sort((a, b) => {
+        let val = 0;
+        switch (SORT_BY) {
+          case 'priority':
+            val = (PRIO[b.priority || 'medium'] || 0) - (PRIO[a.priority || 'medium'] || 0);
+            break;
+          case 'due': {
+            const da = a.due ? new Date(a.due + 'T00:00:00') : new Date('9999-12-31');
+            const db = b.due ? new Date(b.due + 'T00:00:00') : new Date('9999-12-31');
+            val = da - db;
+            break;
+          }
+          case 'alpha':
+            val = a.text.localeCompare(b.text, 'pt-BR', { sensitivity: 'base' });
+            break;
+          case 'starred':
+            val = (b.starred ? 1 : 0) - (a.starred ? 1 : 0);
+            if (val === 0) val = new Date(b.date) - new Date(a.date);
+            break;
+          default: // 'date'
+            val = new Date(b.date) - new Date(a.date);
+        }
+        return SORT_DIR === 'asc' ? -val : val;
+      });
+    }
+
+    /* ─── TAG FILTERS ─── */
+    function addTagFilter(tag) {
+      if (!tag || FILTER_TAGS.includes(tag)) return;
+      FILTER_TAGS.push(tag);
+      STATE.pages = { todo:1, doing:1, done:1 };
+      renderTagFilterBar();
+      scheduleRender();
+    }
+    function removeTagFilter(tag) {
+      FILTER_TAGS = FILTER_TAGS.filter(t => t !== tag);
+      renderTagFilterBar();
+      STATE.pages = { todo:1, doing:1, done:1 };
+      scheduleRender();
+    }
+    function clearTagFilters() {
+      FILTER_TAGS = [];
+      renderTagFilterBar();
+      STATE.pages = { todo:1, doing:1, done:1 };
+      scheduleRender();
+    }
+    function renderTagFilterBar() {
+      const bar = document.getElementById('tag-filter-bar');
+      if (!bar) return;
+      bar.classList.toggle('show', FILTER_TAGS.length > 0);
+      if (!FILTER_TAGS.length) { bar.innerHTML = ''; return; }
+      bar.innerHTML =
+        `<span class="tag-filter-label">🏷 Etiquetas:</span>` +
+        FILTER_TAGS.map(tag =>
+          `<span class="tag-filter-chip">#${escapeHtml(tag)}<span class="tag-filter-chip-close" onclick="removeTagFilter('${tag.replace(/'/g,"\\'")}')" title="Remover filtro">✕</span></span>`
+        ).join('') +
+        `<button class="sort-btn" onclick="clearTagFilters()" style="margin-left:auto;">✕ Limpar</button>`;
     }
 
     /* ─── DRAG & DROP ─── */
@@ -2994,7 +3167,7 @@
 
     function _cardHash(task) {
       return [task.text, task.notes, task.col, task.priority, task.starred,
-              task.due, task.profile, SEARCH_QUERY].join('|');
+              task.due, task.profile, SEARCH_QUERY, (task.tags||[]).join(',')].join('|');
     }
 
     function createCardEl(task) {
@@ -3032,6 +3205,9 @@
       const profileLabel = task.profile === 'profissional' ? 'Prof.' : task.profile === 'grupo' ? 'Grupo' : 'Pess.';
       const duePart = task.due ? (() => { const d = formatDue(task.due); return d ? `<span class="card-due ${d.cls}">${d.label}</span>` : ''; })() : '';
       const notesPart = task.notes ? `<div class="card-notes">${escapeHtml(task.notes)}</div>` : '';
+      const tagsPart  = (task.tags && task.tags.length > 0)
+        ? `<div class="card-tags">${task.tags.map(tag => `<span class="card-tag" onclick="event.stopPropagation();addTagFilter('${tag.replace(/'/g,"\\'")}')">&#35;${escapeHtml(tag)}</span>`).join('')}</div>`
+        : '';
 
       let textHtml = escapeHtml(task.text);
       if (SEARCH_QUERY) {
@@ -3043,6 +3219,7 @@
       card.innerHTML = `
         <div class="card-text" ondblclick="startInlineEdit('${task.id}', this)" title="Duplo-clique para editar rápido">${textHtml}</div>
         ${notesPart}
+        ${tagsPart}
         <div class="card-footer">
           ${starBtn}
           <div class="card-meta">
@@ -3072,7 +3249,7 @@
         const alert = document.getElementById(`alert-${col}`);
         const pages = document.getElementById(`pages-${col}`);
 
-        const allTasks    = STATE.tasks.filter(t => matchesFilters(t) && t.col === col);
+        const allTasks    = _sortTasks(STATE.tasks.filter(t => matchesFilters(t) && t.col === col));
         const allColTasks = STATE.tasks.filter(t => t.col === col && t.profile === STATE.profile);
         const total       = allTasks.length;
         const totalPages  = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -3196,7 +3373,9 @@
         priority: prio ? prio.value : 'medium',
         profile:  STATE.profile,
         date:     new Date().toISOString(),
-        due:      due && due.value ? due.value : null
+        due:      due && due.value ? due.value : null,
+        tags:     [],
+        starred:  false
       });
       input.value = ''; due.value = '';
       input.focus();
@@ -3261,6 +3440,7 @@
       document.getElementById('edit-prio').value = task.priority || 'medium';
       document.getElementById('edit-due').value = task.due || '';
       document.getElementById('edit-col').value = task.col;
+      document.getElementById('edit-tags').value = (task.tags || []).join(', ');
       document.getElementById('edit-overlay').classList.add('open');
       setTimeout(() => document.getElementById('edit-text').focus(), 350);
     }
@@ -3282,6 +3462,8 @@
       task.priority = document.getElementById('edit-prio').value;
       task.due      = document.getElementById('edit-due').value || null;
       task.col      = newCol;
+      task.tags     = document.getElementById('edit-tags').value
+        .split(',').map(t => t.trim().toLowerCase().replace(/[^\w\-áàãâäéèêëíìîïóòõôöúùûüçña-z0-9]/gi, '')).filter(Boolean).slice(0, 5);
       closeEdit();
       saveState(); scheduleRender(); updateStats();
       if (oldCol !== newCol) { bumpCounter(oldCol); bumpCounter(newCol); }
