@@ -84,14 +84,17 @@ export default async function handler(req, res) {
 
     // Limpa campos potencialmente perigosos de cada tarefa
     const safeTasks = tasks.map(t => ({
-      id:       String(t.id       || ''),
-      text:     String(t.text     || '').slice(0, 500),
-      notes:    String(t.notes    || '').slice(0, 2000),
-      col:      ['todo','doing','done'].includes(t.col) ? t.col : 'todo',
-      priority: ['low','medium','high'].includes(t.priority) ? t.priority : 'medium',
-      profile:  ['pessoal','profissional'].includes(t.profile) ? t.profile : 'pessoal',
-      date:     t.date  || new Date().toISOString(),
-      due:      t.due   || null,
+      id:          String(t.id       || ''),
+      text:        String(t.text     || '').slice(0, 500),
+      notes:       String(t.notes    || '').slice(0, 2000),
+      col:         ['todo','doing','done'].includes(t.col) ? t.col : 'todo',
+      priority:    ['low','medium','high'].includes(t.priority) ? t.priority : 'medium',
+      profile:     ['pessoal','profissional'].includes(t.profile) ? t.profile : 'pessoal',
+      date:        t.date  || new Date().toISOString(),
+      due:         t.due   || null,
+      starred:     t.starred === true,
+      completedAt: t.completedAt || null,
+      tags:        Array.isArray(t.tags) ? t.tags.slice(0,5).map(tag => String(tag).slice(0,20)) : [],
     }));
 
     await tasksCol.updateOne(

@@ -1,11 +1,12 @@
-// api/ai.js  —  POST /api/ai  (powered by NVIDIA NIM — Gemma 4 31B)
+// api/ai.js  —  POST /api/ai  (powered by Groq — gratuito)
 // { ping: true }              → health check
 // { system, messages: [...] } → conversa com histórico completo
 
-const NVIDIA_KEY = process.env.GROQ_API_KEY;
+const GROQ_KEY   = process.env.GROQ_API_KEY;
 const MODEL      = 'llama-3.3-70b-versatile';
 const MAX_TOKENS = 1024;
 const MAX_HIST   = 20;
+const TIMEOUT_MS = 25000; // Groq é rápido — 25s é mais que suficiente
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
@@ -21,12 +22,12 @@ export default async function handler(req, res) {
 
   // ── Health check ──────────────────────────────────────────────
   if (req.body?.ping) {
-    if (!NVIDIA_KEY) return json(res, 503, { ok: false, error: 'NVIDIA_API_KEY não configurada na Vercel.' });
+    if (!GROQ_KEY) return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
     return json(res, 200, { ok: true, model: MODEL });
   }
 
-  if (!NVIDIA_KEY) {
-    return json(res, 503, { ok: false, error: 'NVIDIA_API_KEY não configurada na Vercel.' });
+  if (!GROQ_KEY) {
+    return json(res, 503, { ok: false, error: 'GROQ_API_KEY não configurada na Vercel.' });
   }
 
   const { system, messages, message } = req.body || {};
@@ -45,16 +46,21 @@ export default async function handler(req, res) {
 
   const systemMsg = system || 'Você é uma IA assistente de uso geral integrada ao Driftask. Responda qualquer pergunta em português brasileiro de forma clara e útil.';
 
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
+      method:  'POST',
+      signal:  controller.signal,
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${NVIDIA_KEY}`,
+        'Authorization': `Bearer ${GROQ_KEY}`,
       },
       body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
+        model:       MODEL,
+        max_tokens:  MAX_TOKENS,
+        temperature: 0.7,
         messages: [
           { role: 'system', content: systemMsg },
           ...history
@@ -62,21 +68,26 @@ export default async function handler(req, res) {
       }),
     });
 
+    clearTimeout(timeoutId);
     const data = await r.json();
 
     if (!r.ok) {
       const errMsg = data?.error?.message || `Erro HTTP ${r.status}`;
-      console.error('[ai] NVIDIA NIM error:', errMsg);
+      console.error('[ai] Groq error:', errMsg);
       return json(res, 502, { error: errMsg });
     }
 
     const reply = data.choices?.[0]?.message?.content?.trim() || '';
-    if (!reply) return json(res, 502, { error: 'Resposta vazia da NVIDIA NIM.' });
+    if (!reply) return json(res, 502, { error: 'Resposta vazia do Groq.' });
 
     return json(res, 200, { ok: true, reply, model: MODEL });
 
   } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      return json(res, 504, { error: 'A IA demorou demais para responder. Tente novamente.' });
+    }
     console.error('[ai] fetch error:', err.message);
-    return json(res, 502, { error: 'Falha de conexão: ' + err.message });
+    return json(res, 502, { error: 'Erro ao conectar com o Groq: ' + err.message });
   }
 }
