@@ -2022,6 +2022,13 @@
       </div>
       <button class="sidebar-btn danger" onclick="confirmClear()">🗑 Limpar todas as tarefas</button>
     </div>
+    <div class="sidebar-divider"></div>
+
+    <div class="setting-section" id="sidebar-account-section" style="display:none;">
+      <div class="setting-label">Conta</div>
+      <button class="sidebar-btn" onclick="logoutUser()">🚪 Sair da conta</button>
+      <button class="sidebar-btn danger" onclick="confirmDeleteAccount()" style="margin-top:4px;">🗑 Excluir minha conta</button>
+    </div>
 
   </div>
 
@@ -2525,8 +2532,38 @@
       document.getElementById('auth-screen').classList.remove('hidden-auth');
       closeUserDropdown();
       updateUserChip(null);
+      document.getElementById('sidebar-account-section').style.display = 'none';
       renderAll(); updateStats(); closeSidebar();
       showToast('Sessão encerrada.');
+    }
+
+    function confirmDeleteAccount() {
+      const overlay = document.getElementById('confirm-overlay');
+      const msg     = document.getElementById('confirm-msg');
+      const btn     = document.getElementById('confirm-ok-btn');
+      msg.innerHTML = `Isso vai <strong>apagar permanentemente</strong> sua conta e todas as suas tarefas.<br>Essa ação <strong>não pode ser desfeita</strong>.`;
+      btn.textContent = 'Sim, excluir minha conta';
+      btn.onclick = deleteAccount;
+      overlay.classList.add('open');
+    }
+
+    async function deleteAccount() {
+      closeConfirm();
+      if (!STATE.token) return;
+      try {
+        const res = await fetch('/api/auth/delete', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + STATE.token }
+        });
+        if (res.ok) {
+          showToast('Conta excluída com sucesso.', '');
+          logoutUser();
+        } else {
+          showToast('Erro ao excluir conta. Tente novamente.', 'error');
+        }
+      } catch(e) {
+        showToast('Erro de conexão ao excluir conta.', 'error');
+      }
     }
 
     /* ─── USER CHIP ─── */
@@ -3356,8 +3393,11 @@
     }
     function confirmClear() {
       const profileLabel = STATE.profile === 'profissional' ? 'Profissional' : 'Pessoal';
+      const btn = document.getElementById('confirm-ok-btn');
       document.getElementById('confirm-msg').innerHTML =
         `Isso vai apagar <strong>permanentemente</strong> todas as tarefas do perfil <strong>${profileLabel}</strong>.<br>Essa ação não pode ser desfeita.`;
+      btn.textContent = 'Sim, apagar tudo';
+      btn.onclick = executeClear;
       document.getElementById('confirm-overlay').classList.add('open');
     }
     function closeConfirm() {
@@ -3523,6 +3563,8 @@
       document.getElementById('sidebar-overlay').classList.add('open');
       buildAccentGrid(); buildColPresets();
       setTimeout(checkAIStatus, 300);
+      // Mostra seção de conta apenas quando logado
+      document.getElementById('sidebar-account-section').style.display = STATE.token ? '' : 'none';
     }
     function closeSidebar() {
       document.getElementById('sidebar').classList.remove('open');
