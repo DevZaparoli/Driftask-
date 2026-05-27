@@ -1187,7 +1187,146 @@
       box-shadow: 0 0 0 2px var(--accent);
     }
 
-    /* ─── MODAL DE CONFIRMAÇÃO DESTRUTIVA ─── */
+    /* ─── OVERLAY DEDICADO: TOKEN DE ADMINISTRADOR ─── */
+    @keyframes token-overlay-in  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes token-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes token-box-in {
+      0%   { opacity: 0; transform: scale(0.85) translateY(32px) rotate(-1deg); }
+      60%  { opacity: 1; transform: scale(1.03) translateY(-4px) rotate(0.3deg); }
+      80%  { transform: scale(0.98) translateY(2px); }
+      100% { transform: scale(1) translateY(0) rotate(0deg); }
+    }
+    @keyframes token-box-out {
+      0%   { opacity: 1; transform: scale(1) translateY(0); }
+      100% { opacity: 0; transform: scale(0.88) translateY(24px); }
+    }
+    @keyframes token-shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes token-icon-bounce {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      25%      { transform: translateY(-8px) rotate(-8deg); }
+      75%      { transform: translateY(-4px) rotate(6deg); }
+    }
+    @keyframes token-glow-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+      50%      { box-shadow: 0 0 24px 4px rgba(16,185,129,0.25); }
+    }
+    .admin-token-overlay {
+      position: fixed; inset: 0; z-index: 10001;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .admin-token-overlay.entering {
+      display: flex;
+      animation: token-overlay-in 0.3s ease forwards;
+    }
+    .admin-token-overlay.entering .admin-token-box {
+      animation: token-box-in 0.55s cubic-bezier(0.34,1.4,0.64,1) forwards;
+    }
+    .admin-token-overlay.leaving {
+      display: flex;
+      animation: token-overlay-out 0.25s ease forwards;
+    }
+    .admin-token-overlay.leaving .admin-token-box {
+      animation: token-box-out 0.25s ease forwards;
+    }
+    .admin-token-box {
+      background: var(--bg-sidebar);
+      border: 1px solid rgba(16,185,129,0.4);
+      border-radius: var(--radius-lg); padding: 28px 24px; width: 100%; max-width: 420px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(16,185,129,0.1);
+      animation: token-glow-pulse 3s ease-in-out infinite 0.6s;
+    }
+    .admin-token-icon-anim {
+      display: inline-block;
+      animation: token-icon-bounce 1.2s ease-in-out 0.5s 2;
+    }
+    .admin-token-title {
+      font-family: var(--font-display); font-size: 17px; font-weight: 800;
+      color: #10b981; text-align: center; letter-spacing: 0.01em;
+    }
+    .admin-token-warning {
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-md); padding: 10px 12px;
+      font-size: 12px; color: #f59e0b; line-height: 1.6;
+    }
+    .admin-token-value {
+      background: var(--bg-input); border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-md); padding: 14px;
+      font-family: monospace; font-size: 11.5px; color: #10b981;
+      word-break: break-all; line-height: 1.8; letter-spacing: 0.06em;
+      user-select: all; cursor: text;
+      background-image: linear-gradient(90deg,
+        transparent 0%, rgba(16,185,129,0.06) 50%, transparent 100%);
+      background-size: 200% auto;
+      animation: token-shimmer 3s linear infinite;
+    }
+    .admin-token-copy {
+      padding: 11px; border-radius: var(--radius-md); border: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; font-family: var(--font-display);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+    }
+    .admin-token-copy:hover  { opacity: 0.88; transform: translateY(-1px); }
+    .admin-token-copy:active { transform: scale(0.97); }
+
+    /* ─── MODAL EXCLUIR CONTA ─── */
+    .delete-account-box {
+      background: var(--bg-sidebar); border: 2px solid rgba(239,68,68,0.5);
+      border-radius: var(--radius-lg); padding: 28px 24px; width: 100%; max-width: 400px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 16px 48px rgba(239,68,68,0.2), 0 0 0 1px rgba(239,68,68,0.1);
+      transform: scale(0.93) translateY(10px);
+      transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    .confirm-overlay.open .delete-account-box { transform: scale(1) translateY(0); }
+    .delete-account-banner {
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-md); padding: 14px;
+      text-align: center; display: flex; flex-direction: column; gap: 6px;
+    }
+    .delete-account-banner-title {
+      font-family: var(--font-display); font-size: 18px; font-weight: 900;
+      color: #ef4444; letter-spacing: 0.02em;
+    }
+    .delete-account-banner-sub {
+      font-size: 12px; color: var(--text-2); line-height: 1.6;
+    }
+    .delete-account-input {
+      width: 100%; background: var(--bg-input);
+      border: 1.5px solid rgba(239,68,68,0.4); border-radius: var(--radius-md);
+      padding: 12px 16px; font-family: var(--font-body); font-size: 14px;
+      color: var(--text-1); outline: none; box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .delete-account-input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.2);
+    }
+    .delete-account-confirm-btn {
+      padding: 12px; border-radius: var(--radius-md); border: none;
+      background: #ef4444; color: #fff; font-family: var(--font-display);
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s; letter-spacing: 0.02em;
+    }
+    .delete-account-confirm-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .delete-account-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── MODAL EXCLUIR GRUPO ─── */
+    .delete-group-box {
+      background: var(--bg-sidebar); border: 1px solid rgba(239,68,68,0.35);
+      border-radius: var(--radius-lg); padding: 28px 24px; width: 100%; max-width: 400px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      transform: scale(0.93) translateY(10px);
+      transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    .confirm-overlay.open .delete-group-box { transform: scale(1) translateY(0); }
     .confirm-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.6);
       backdrop-filter: blur(8px); z-index: 9999;
@@ -1272,7 +1411,8 @@
           <input type="text" id="auth-email" class="auth-input"
             placeholder="joao@email.com  ou  joao"
             autocomplete="username"
-            oninput="clearFieldError('auth-email')">
+            oninput="clearFieldError('auth-email')"
+            onkeydown="if(event.key==='Enter')handleAuthSubmit()">
         </div>
         <div class="auth-field-hint">💡 Você pode usar apenas a primeira parte do seu e-mail cadastrado</div>
         <div class="auth-field-error" id="auth-email-error"></div>
@@ -1285,7 +1425,8 @@
           <input type="email" id="auth-reg-email" class="auth-input"
             placeholder="seu@email.com"
             autocomplete="email"
-            oninput="validateRegEmail()">
+            oninput="validateRegEmail()"
+            onkeydown="if(event.key==='Enter')handleAuthSubmit()">
         </div>
         <div class="auth-field-hint">📧 Somente e-mails válidos são aceitos no cadastro</div>
         <div class="auth-field-error" id="auth-reg-email-error"></div>
@@ -1300,7 +1441,7 @@
             autocomplete="current-password"
             oninput="clearFieldError('auth-password')"
             onkeydown="if(event.key==='Enter')handleAuthSubmit()">
-          <button class="pwd-toggle" type="button" onclick="togglePwdVisibility()" title="Mostrar/ocultar senha">👁</button>
+          <button class="pwd-toggle" type="button" tabindex="-1" onclick="togglePwdVisibility()" title="Mostrar/ocultar senha">👁</button>
         </div>
         <div class="auth-field-error" id="auth-password-error"></div>
       </div>
@@ -1314,7 +1455,7 @@
             autocomplete="new-password"
             oninput="clearFieldError('auth-confirm-password')"
             onkeydown="if(event.key==='Enter')handleAuthSubmit()">
-          <button class="pwd-toggle" type="button" onclick="toggleConfirmVisibility()" title="Mostrar/ocultar senha">👁</button>
+          <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleConfirmVisibility()" title="Mostrar/ocultar senha">👁</button>
         </div>
         <div class="auth-field-error" id="auth-confirm-password-error"></div>
       </div>
@@ -1340,7 +1481,7 @@
             <input type="password" id="reset-new-password" class="auth-input"
               placeholder="mínimo 6 caracteres"
               onkeydown="if(event.key==='Enter')handleReset()">
-            <button class="pwd-toggle" type="button" onclick="toggleResetVisibility()" title="Mostrar/ocultar senha">👁</button>
+            <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleResetVisibility()" title="Mostrar/ocultar senha">👁</button>
           </div>
           <div class="auth-field-error" id="reset-new-password-error"></div>
         </div>
@@ -1409,7 +1550,7 @@
                 autocomplete="off"
                 oninput="clearFieldError('group-join-password')"
                 onkeydown="if(event.key==='Enter')handleGroupJoin()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupJoinPwd()">👁</button>
+              <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleGroupJoinPwd()">👁</button>
             </div>
             <div class="auth-field-error" id="group-join-password-error"></div>
           </div>
@@ -1440,7 +1581,7 @@
                 autocomplete="new-password"
                 oninput="clearFieldError('group-create-password')"
                 onkeydown="if(event.key==='Enter')handleGroupCreate()">
-              <button class="pwd-toggle" type="button" onclick="toggleGroupCreatePwd()">👁</button>
+              <button class="pwd-toggle" type="button" tabindex="-1" onclick="toggleGroupCreatePwd()">👁</button>
             </div>
             <div class="auth-field-error" id="group-create-password-error"></div>
           </div>
@@ -1777,9 +1918,64 @@
     </div>
   </div>
 
-  <!-- Modal de confirmação destrutiva -->
+  <!-- Modal de confirmação destrutiva (limpar tarefas) -->
   <div class="confirm-overlay" id="confirm-overlay">
-    <div class="confirm-box">
+    <!-- Wrapper: apenas este div é centralizado pelo overlay -->
+    <div id="modal-wrapper" style="width:100%;max-width:440px;padding:20px;box-sizing:border-box;">
+
+    <!-- ═══ MODAL: EXCLUIR GRUPO ═══ -->
+    <div class="delete-group-box" id="modal-delete-group" style="display:none;flex-direction:column;gap:14px;">
+      <div style="text-align:center;font-size:28px;">🗑</div>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#ef4444;text-align:center;">Excluir Grupo</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.6;text-align:center;">
+        Esta ação é <strong>permanente e irreversível</strong>. Todas as tarefas do grupo serão apagadas.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Nome do Grupo</label>
+        <input type="text" id="delete-group-name" class="delete-account-input"
+          placeholder="nome exato do grupo"
+          oninput="clearFieldError('delete-group-name')">
+        <div class="auth-field-error" id="delete-group-name-error"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);">Token de Administrador</label>
+        <input type="text" id="delete-group-token" class="delete-account-input"
+          placeholder="cole seu token de administrador aqui"
+          style="font-family:monospace;font-size:12px;"
+          oninput="clearFieldError('delete-group-token')">
+        <div class="auth-field-error" id="delete-group-token-error"></div>
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" onclick="closeDeleteGroupModal()">Cancelar</button>
+        <button class="confirm-delete" id="delete-group-btn" onclick="executeDeleteGroup()">Excluir Grupo</button>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL: EXCLUIR CONTA ═══ -->
+    <div class="delete-account-box" id="modal-delete-account" style="display:none;flex-direction:column;gap:14px;">
+      <div class="delete-account-banner">
+        <div style="font-size:36px;">⛔</div>
+        <div class="delete-account-banner-title">EXCLUINDO CONTA DO DRIFTASK</div>
+        <div class="delete-account-banner-sub">
+          Você está prestes a <strong>excluir permanentemente</strong> sua conta e <strong>todas as suas tarefas</strong>.<br>
+          Esta ação <strong>não pode ser desfeita</strong>.
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-2);text-align:center;">Para confirmar, digite sua senha atual:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <input type="password" id="delete-account-password" class="delete-account-input"
+          placeholder="sua senha atual"
+          onkeydown="if(event.key==='Enter')executeDeleteAccount()">
+        <div class="auth-field-error" id="delete-account-error"></div>
+      </div>
+      <button class="delete-account-confirm-btn" id="delete-account-btn" onclick="executeDeleteAccount()">
+        ⛔ SIM, EXCLUIR MINHA CONTA PERMANENTEMENTE
+      </button>
+      <button class="confirm-cancel" onclick="closeDeleteAccountModal()">Cancelar — não quero excluir</button>
+    </div>
+
+    <!-- ═══ MODAL: CONFIRMAÇÃO LIMPAR TAREFAS ═══ -->
+    <div class="confirm-box" id="modal-confirm-clear" style="display:none;">
       <div class="confirm-icon">🗑</div>
       <div class="confirm-title">Limpar tarefas</div>
       <div class="confirm-msg" id="confirm-msg">
@@ -1791,9 +1987,33 @@
         <button class="confirm-delete" id="confirm-ok-btn" onclick="executeClear()">Sim, apagar tudo</button>
       </div>
     </div>
+
+    </div><!-- /modal-wrapper -->
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Overlay dedicado para o Token de Admin — z-index 10001, acima de tudo -->
+  <div class="admin-token-overlay" id="admin-token-overlay">
+    <div class="admin-token-box" style="flex-direction:column;gap:14px;max-width:420px;width:100%;">
+      <div style="text-align:center;font-size:36px;"><span class="admin-token-icon-anim">🔑</span></div>
+      <div class="admin-token-title">Token de Administrador</div>
+      <div style="text-align:center;font-size:13px;color:var(--text-2);">
+        Grupo: <strong id="admin-token-group-name" style="color:#10b981;"></strong>
+      </div>
+      <div class="admin-token-warning">
+        ⚠️ <strong>Guarde este token agora.</strong> Ele é exibido <strong>uma única vez</strong> e não pode ser recuperado. Você precisará dele caso queira excluir o grupo no futuro.
+      </div>
+      <div class="admin-token-value" id="admin-token-display" onclick="selectAdminToken()"></div>
+      <button class="admin-token-copy" onclick="copyAdminToken()">📋 Copiar Token</button>
+      <div style="font-size:11px;color:var(--text-3);text-align:center;">
+        Clique no token para selecionar todo o texto
+      </div>
+      <button class="confirm-cancel" style="margin-top:4px;" onclick="closeAdminTokenModal()">
+        ✓ Entendi, já salvei meu token
+      </button>
+    </div>
+  </div>
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -1868,7 +2088,7 @@
           background:rgba(139,92,246,0.15);color:#a78bfa;
           border:1px solid rgba(139,92,246,0.3);
           padding:2px 7px;border-radius:99px;margin-left:6px;text-transform:uppercase;">
-          Groq · LLaMA
+          NVIDIA · Gemma
         </span>
       </div>
 
@@ -1913,6 +2133,17 @@
         style="display:none;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#10b981;"
         onclick="leaveGroup();closeSidebar()">
         👥 Sair do grupo
+      </button>
+      <button class="sidebar-btn" id="sidebar-group-delete-btn"
+        style="display:none;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:#ef4444;margin-top:4px;"
+        onclick="openDeleteGroupModal();closeSidebar()">
+        🗑 Excluir este grupo
+      </button>
+      <div style="height:1px;background:var(--border);margin:8px 0;" id="sidebar-delete-account-divider" style="display:none;"></div>
+      <button class="sidebar-btn" id="sidebar-delete-account-btn"
+        style="display:none;background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2);color:#ef4444;font-weight:700;"
+        onclick="openDeleteAccountModal()">
+        ⛔ Excluir conta do Driftask
       </button>
       <div id="sidebar-account-info" style="font-size:11px;color:var(--text-3);margin-top:4px;"></div>
     </div>
@@ -3138,22 +3369,142 @@
       };
       reader.readAsText(file);
     }
+    /* ── Helpers: abre um único modal no overlay ── */
+    function _openModal(id) {
+      ['modal-delete-group','modal-delete-account','modal-confirm-clear']
+        .forEach(m => {
+          const el = document.getElementById(m);
+          if (el) el.style.display = m === id ? 'flex' : 'none';
+        });
+      document.getElementById('confirm-overlay').classList.add('open');
+      const wrapper = document.getElementById('modal-wrapper');
+      if (wrapper) wrapper.scrollTop = 0;
+    }
+    function _closeAllModals() {
+      document.getElementById('confirm-overlay').classList.remove('open');
+      ['modal-delete-group','modal-delete-account','modal-confirm-clear']
+        .forEach(m => { const el = document.getElementById(m); if (el) el.style.display = 'none'; });
+    }
     function confirmClear() {
       const profileLabel = STATE.profile === 'profissional' ? 'Profissional' : 'Pessoal';
       document.getElementById('confirm-msg').innerHTML =
         `Isso vai apagar <strong>permanentemente</strong> todas as tarefas do perfil <strong>${profileLabel}</strong>.<br>Essa ação não pode ser desfeita.`;
-      document.getElementById('confirm-overlay').classList.add('open');
+      _openModal('modal-confirm-clear');
     }
-    function closeConfirm() {
-      document.getElementById('confirm-overlay').classList.remove('open');
-    }
+    function closeConfirm() { _closeAllModals(); }
     function executeClear() {
       STATE.tasks = STATE.tasks.filter(t => t.profile !== STATE.profile);
       STATE.pages = { todo:1, doing:1, done:1 };
       saveState(); scheduleRender(); updateStats();
       showToast('Tarefas removidas.', 'error');
       closeSidebar();
-      closeConfirm();
+      _closeAllModals();
+    }
+
+    /* ── Token de admin: overlay dedicado (z-index 10001) ── */
+    let _pendingAdminToken = null;
+    function showAdminTokenModal(token, groupName) {
+      _pendingAdminToken = token;
+      document.getElementById('admin-token-display').textContent = token;
+      const nameEl = document.getElementById('admin-token-group-name');
+      if (nameEl) nameEl.textContent = groupName || '';
+      const overlay = document.getElementById('admin-token-overlay');
+      overlay.classList.remove('leaving');
+      overlay.style.display = 'flex';
+      // Força reflow para a animação começar do zero
+      overlay.offsetHeight;
+      overlay.classList.add('entering');
+    }
+    function copyAdminToken() {
+      if (!_pendingAdminToken) return;
+      navigator.clipboard.writeText(_pendingAdminToken).then(() => {
+        const btn = document.querySelector('.admin-token-copy');
+        btn.textContent = '✅ Copiado!';
+        btn.style.background = 'linear-gradient(135deg,#059669,#047857)';
+        setTimeout(() => {
+          btn.textContent = '📋 Copiar Token';
+          btn.style.background = '';
+        }, 2000);
+      });
+    }
+    function selectAdminToken() {
+      const el = document.getElementById('admin-token-display');
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+    function closeAdminTokenModal() {
+      _pendingAdminToken = null;
+      const overlay = document.getElementById('admin-token-overlay');
+      overlay.classList.remove('entering');
+      overlay.classList.add('leaving');
+      // Aguarda a animação de saída terminar antes de esconder
+      setTimeout(() => {
+        overlay.classList.remove('leaving');
+        overlay.style.display = 'none';
+      }, 260);
+    }
+
+    /* ── Excluir Grupo ── */
+    function openDeleteGroupModal() {
+      document.getElementById('delete-group-name').value  = GROUP_NAME || '';
+      document.getElementById('delete-group-token').value = '';
+      clearFieldError('delete-group-name');
+      clearFieldError('delete-group-token');
+      _openModal('modal-delete-group');
+    }
+    function closeDeleteGroupModal() { _closeAllModals(); }
+    async function executeDeleteGroup() {
+      const name  = document.getElementById('delete-group-name').value.trim();
+      const token = document.getElementById('delete-group-token').value.trim();
+      let valid = true;
+      if (!name)  { showFieldError('delete-group-name',  '⚠ Informe o nome do grupo.'); valid = false; }
+      if (!token) { showFieldError('delete-group-token', '⚠ Informe o token de administrador.'); valid = false; }
+      if (!valid) return;
+      const btn = document.getElementById('delete-group-btn');
+      btn.disabled = true; btn.textContent = 'Excluindo...';
+      try {
+        const res  = await fetch('/api/groups', {
+          method:  'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', name, adminToken: token })
+        });
+        const data = await res.json();
+        if (!res.ok) { showFieldError('delete-group-token', '⚠ ' + (data.error || 'Erro.')); return; }
+        _closeAllModals();
+        leaveGroup();
+        showToast(`Grupo "${name}" excluído permanentemente.`, 'error');
+      } catch { showFieldError('delete-group-token', '⚠ Erro de conexão. Tente novamente.'); }
+      finally { btn.disabled = false; btn.textContent = 'Excluir Grupo'; }
+    }
+
+    /* ── Excluir Conta ── */
+    function openDeleteAccountModal() {
+      document.getElementById('delete-account-password').value = '';
+      document.getElementById('delete-account-error').textContent = '';
+      _openModal('modal-delete-account');
+    }
+    function closeDeleteAccountModal() { _closeAllModals(); }
+    async function executeDeleteAccount() {
+      const password = document.getElementById('delete-account-password').value;
+      const errEl    = document.getElementById('delete-account-error');
+      errEl.textContent = '';
+      if (!password) { errEl.textContent = '⚠ Digite sua senha para confirmar.'; return; }
+      const btn = document.getElementById('delete-account-btn');
+      btn.disabled = true; btn.textContent = 'Excluindo...';
+      try {
+        const res  = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STATE.token}` },
+          body: JSON.stringify({ action: 'delete-account', password })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = '⚠ ' + (data.error || 'Erro ao excluir conta.'); return; }
+        _closeAllModals();
+        logoutUser();
+        showToast('Conta excluída permanentemente.', 'error');
+      } catch { errEl.textContent = '⚠ Erro de conexão. Tente novamente.'; }
+      finally { btn.disabled = false; btn.textContent = '⛔ SIM, EXCLUIR MINHA CONTA PERMANENTEMENTE'; }
     }
 
     /* ─── TEMA ─── */
@@ -3310,23 +3661,33 @@
       _updateSidebarAccount();
     }
     function _updateSidebarAccount() {
-      const logoutBtn  = document.getElementById('sidebar-logout-btn');
-      const groupBtn   = document.getElementById('sidebar-group-leave-btn');
-      const info       = document.getElementById('sidebar-account-info');
+      const logoutBtn      = document.getElementById('sidebar-logout-btn');
+      const groupLeaveBtn  = document.getElementById('sidebar-group-leave-btn');
+      const groupDeleteBtn = document.getElementById('sidebar-group-delete-btn');
+      const deleteAccBtn   = document.getElementById('sidebar-delete-account-btn');
+      const info           = document.getElementById('sidebar-account-info');
       if (!logoutBtn) return;
-      // Mostra botão de sair do grupo se estiver em um grupo
+
       if (GROUP_TOKEN && GROUP_NAME) {
-        groupBtn.style.display  = '';
-        logoutBtn.style.display = STATE.token ? '' : 'none';
-        if (info) info.textContent = `Grupo: ${GROUP_NAME}${STATE.email ? ' · ' + STATE.email : ''}`;
+        // Modo grupo
+        groupLeaveBtn.style.display  = '';
+        groupDeleteBtn.style.display = '';
+        logoutBtn.style.display      = STATE.token ? '' : 'none';
+        deleteAccBtn.style.display   = STATE.token ? '' : 'none';
+        if (info) info.textContent   = `Grupo: ${GROUP_NAME}${STATE.email ? ' · ' + STATE.email : ''}`;
       } else if (STATE.token) {
-        logoutBtn.style.display = '';
-        groupBtn.style.display  = 'none';
-        if (info) info.textContent = STATE.email || '';
+        // Apenas conta pessoal
+        logoutBtn.style.display      = '';
+        deleteAccBtn.style.display   = '';
+        groupLeaveBtn.style.display  = 'none';
+        groupDeleteBtn.style.display = 'none';
+        if (info) info.textContent   = STATE.email || '';
       } else {
-        logoutBtn.style.display = 'none';
-        groupBtn.style.display  = 'none';
-        if (info) info.textContent = 'Não conectado';
+        logoutBtn.style.display      = 'none';
+        deleteAccBtn.style.display   = 'none';
+        groupLeaveBtn.style.display  = 'none';
+        groupDeleteBtn.style.display = 'none';
+        if (info) info.textContent   = 'Não conectado';
       }
     }
     function closeSidebar() {
@@ -3386,8 +3747,8 @@
         if (data.ok) {
           icon.textContent = '✅';
           msg.innerHTML = `
-            <strong style="color:#10b981">IA ativa</strong> · LLaMA 3.3 70B<br>
-            <span style="font-size:10px;color:var(--text-3)">Assistente pronto para uso ✓</span>`;
+            <strong style="color:#10b981">IA ativa</strong> · Gemma 4 31B<br>
+            <span style="font-size:10px;color:var(--text-3)">Gemma 4 31B pronto ✓</span>`;
           box.style.borderColor = 'rgba(16,185,129,0.4)';
         } else {
           throw new Error(data.error || 'sem chave');
@@ -3397,7 +3758,7 @@
         msg.innerHTML = `
           <strong style="color:#f59e0b">IA não configurada</strong><br>
           <span style="font-size:10px;color:var(--text-3)">
-            Verifique se GROQ_API_KEY está configurada na Vercel.
+            Verifique se NVIDIA_API_KEY está configurada na Vercel.
           </span>`;
         box.style.borderColor = 'rgba(245,158,11,0.35)';
       }
@@ -3820,9 +4181,11 @@ Para sugerir novas tarefas ao kanban, inicie a linha com "TAREFA:" e o usuário 
         const res  = await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', name, password }) });
         const data = await res.json();
         if (!res.ok) { showFieldError('group-create-name', '⚠ ' + (data.error || 'Erro.')); return; }
-        showToast(`Grupo "${data.groupName}" criado! ✦`, 'success');
-        loadGroupList(); // atualiza lista
         enterGroupMode(data.token, data.groupName);
+        loadGroupList();
+        // Mostra o modal sempre — se adminToken vier undefined, exibe aviso de redeploy
+        const tokenToShow = data.adminToken || 'TOKEN_NAO_RETORNADO — atualize api/groups.js e faça o deploy novamente';
+        showAdminTokenModal(tokenToShow, data.groupName);
       } catch { showFieldError('group-create-name', '⚠ Erro de conexão. Tente novamente.'); }
       finally { btn.disabled = false; btn.textContent = 'Criar Grupo ✦'; }
     }
