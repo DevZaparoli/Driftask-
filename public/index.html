@@ -1658,8 +1658,11 @@
       transition: width 0.4s ease;
     }
 
-    .stat-overdue .stat-value {
+    .stat-overdue-active .stat-value {
       color: #ef4444;
+    }
+    .stat-overdue-zero .stat-value {
+      color: var(--text-2);
     }
 
     /* ─── ADD BAR ─── */
@@ -4715,7 +4718,7 @@
           <div class="stat-progress-fill" id="stat-done-bar" style="width:0%"></div>
         </div>
       </div>
-      <div class="stat-card stat-overdue">
+      <div class="stat-card" id="stat-overdue-card">
         <div class="stat-label">Atrasadas</div>
         <div class="stat-value" id="stat-overdue">0</div>
         <div class="stat-sub">com data vencida</div>
@@ -4730,11 +4733,19 @@
         <div class="stat-value" id="stat-high">0</div>
         <div class="stat-sub">tarefas urgentes</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Em Andamento</div>
+        <div class="stat-value" id="stat-doing">0</div>
+        <div class="stat-sub">tarefas em progresso</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Taxa de Conclusão</div>
+        <div class="stat-value" id="stat-pct">0%</div>
+        <div class="stat-sub">do total concluído</div>
+      </div>
       <div class="stat-card" style="grid-column: 1 / -1;">
         <div class="stat-label">Tarefas criadas nos últimos 7 dias</div>
-        <div id="stat-chart" style="display:flex;align-items:flex-end;gap:6px;height:48px;margin-top:8px;"></div>
-        <div id="stat-chart-labels" style="display:flex;gap:6px;margin-top:4px;font-size:10px;color:var(--text-3);">
-        </div>
+        <canvas id="stat-chart" width="420" height="64" style="width:100%;height:64px;margin-top:8px;display:block;"></canvas>
       </div>
     </div>
 
@@ -5706,23 +5717,30 @@
       if (STATE.token && tasksLoaded) {
         clearTimeout(debounceSyncTimeout);
         debounceSyncTimeout = setTimeout(async () => {
-          try {
-            const res = await fetch('/api/tasks', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${STATE.token}`
-              },
-              body: JSON.stringify({ tasks: STATE.tasks })
-            });
-            if (res.ok) {
-              showAutosave(); // ← só aparece se o servidor confirmou o salvamento
-            } else {
-              showToast('Erro ao sincronizar tarefas. Tente novamente.', 'error');
+          const MAX_RETRIES = 3;
+          for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 8000);
+            try {
+              const res = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STATE.token}` },
+                body: JSON.stringify({ tasks: STATE.tasks }),
+                signal: ctrl.signal
+              });
+              clearTimeout(tid);
+              if (res.ok) { showAutosave(); return; }
+              if (res.status === 401) { logoutUser(); return; }
+              throw new Error(`HTTP ${res.status}`);
+            } catch (e) {
+              clearTimeout(tid);
+              if (attempt < MAX_RETRIES - 1) {
+                await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+              } else {
+                showToast('Sem conexão — tarefas não sincronizadas.', 'error');
+                console.error('[sync] Falha após', MAX_RETRIES, 'tentativas:', e.message);
+              }
             }
-          } catch (e) {
-            showToast('Sem conexão — tarefas não sincronizadas.', 'error');
-            console.error('Falha na sincronização automatizada com MongoDB', e);
           }
         }, 1200);
       }
@@ -5948,18 +5966,39 @@
       const overdue = all.filter(t => t.due && new Date(t.due) < now && t.col !== 'done').length;
       const highPrio = all.filter(t => (t.priority || 'medium') === 'high' && t.col !== 'done').length;
 
+      const doing = all.filter(t => t.col === 'doing').length;
       document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-total-sub').textContent = total === 1 ? '1 tarefa' : `${total} tarefas`;
       document.getElementById('stat-done').textContent = `${done} (${pct}%)`;
       document.getElementById('stat-done-bar').style.width = pct + '%';
       document.getElementById('stat-overdue').textContent = overdue;
+      const doingEl = document.getElementById('stat-doing');
+      if (doingEl) doingEl.textContent = doing;
+      const pctEl = document.getElementById('stat-pct');
+      if (pctEl) pctEl.textContent = pct + '%';
+      const overdueCard = document.getElementById('stat-overdue-card');
+      if (overdueCard) {
+        overdueCard.classList.toggle('stat-overdue-active', overdue > 0);
+        overdueCard.classList.toggle('stat-overdue-zero', overdue === 0);
+      }
       document.getElementById('stat-today').textContent = todayCount;
       document.getElementById('stat-high').textContent = highPrio;
 
-      // Gráfico de barras — últimos 7 dias
-      const chart = document.getElementById('stat-chart');
-      const labels = document.getElementById('stat-chart-labels');
-      if (!chart) return;
+      // Gráfico de barras Canvas — últimos 7 dias
+      const canvas = document.getElementById('stat-chart');
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const DPR = window.devicePixelRatio || 1;
+      const W = canvas.offsetWidth || 420;
+      const H = 64;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(DPR, DPR);
+
+      ctx.clearRect(0, 0, W, H);
+
       const days = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
@@ -5968,15 +6007,60 @@
       const counts = days.map(d => all.filter(t => new Date(t.date).toDateString() === d.toDateString()).length);
       const maxCount = Math.max(...counts, 1);
       const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      chart.innerHTML = counts.map((n, i) => {
-        const h = Math.round((n / maxCount) * 44) + 4;
+
+      const barW = Math.floor(W / 7);
+      const maxBarH = H - 18; // reserva 18px embaixo para labels
+      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#a78bfa';
+      const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim() || '167,139,250';
+      const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-3').trim() || '#7a76a0';
+
+      days.forEach((d, i) => {
+        const n = counts[i];
         const isToday = i === 6;
-        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
-          <div style="font-size:9px;color:var(--text-3);font-weight:600;">${n || ''}</div>
-          <div style="width:100%;height:${h}px;background:${isToday ? 'var(--accent)' : 'rgba(var(--accent-rgb),0.35)'};border-radius:4px 4px 0 0;transition:height 0.5s cubic-bezier(0.34,1.4,0.64,1);" title="${n} tarefa${n !== 1 ? 's' : ''} em ${weekDays[days[i].getDay()]}"></div>
-        </div>`;
-      }).join('');
-      labels.innerHTML = days.map((d, i) => `<div style="flex:1;text-align:center;">${weekDays[d.getDay()]}</div>`).join('');
+        const barH = Math.max(4, Math.round((n / maxCount) * maxBarH));
+        const x = i * barW + 2;
+        const y = maxBarH - barH;
+
+        // Barra com gradiente
+        const grad = ctx.createLinearGradient(0, y, 0, maxBarH);
+        if (isToday) {
+          grad.addColorStop(0, accentColor);
+          grad.addColorStop(1, `rgba(${accentRgb},0.4)`);
+        } else {
+          grad.addColorStop(0, `rgba(${accentRgb},0.55)`);
+          grad.addColorStop(1, `rgba(${accentRgb},0.15)`);
+        }
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, barW - 4, barH, [3, 3, 0, 0]);
+        } else {
+          // Polyfill para browsers sem roundRect
+          const r = 3;
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + barW - 4 - r, y);
+          ctx.quadraticCurveTo(x + barW - 4, y, x + barW - 4, y + r);
+          ctx.lineTo(x + barW - 4, y + barH);
+          ctx.lineTo(x, y + barH);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+        }
+        ctx.fill();
+
+        // Contador acima da barra (só se n > 0)
+        if (n > 0) {
+          ctx.fillStyle = isToday ? accentColor : textColor;
+          ctx.font = `bold ${isToday ? 10 : 9}px Inter, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(n, x + (barW - 4) / 2, y - 2);
+        }
+
+        // Label dia da semana
+        ctx.fillStyle = isToday ? accentColor : textColor;
+        ctx.font = `${isToday ? 'bold ' : ''}9px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(weekDays[d.getDay()], x + (barW - 4) / 2, H - 2);
+      });
     }
     function applyStats() {
       document.getElementById('stats-bar').classList.toggle('hidden', !STATE.showStats);
@@ -6431,7 +6515,7 @@
         return;
       }
       const rawTags = tagEl ? tagEl.value : '';
-      const tags = rawTags.split(',').map(t => t.trim().toLowerCase().replace(/[^a-z0-9áéíóúàãõ_-]/gi, '').slice(0, 20)).filter(Boolean).slice(0, 5);
+      const tags = [...new Set(rawTags.split(',').map(t => t.trim().toLowerCase().replace(/[^a-z0-9áéíóúàãõ_-]/gi, '').slice(0, 20)).filter(Boolean))].slice(0, 5);
       STATE.tasks.unshift({
         id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
         text,
@@ -6514,8 +6598,13 @@
       document.getElementById('edit-due').value = task.due || '';
       document.getElementById('edit-col').value = task.col;
       document.getElementById('edit-tags').value = (task.tags || []).join(', ');
-      document.getElementById('edit-overlay').classList.add('open');
-      setTimeout(() => document.getElementById('edit-text').focus(), 350);
+      const overlay = document.getElementById('edit-overlay');
+      overlay.classList.add('open');
+      // Foca após a transição CSS terminar (sem magic number)
+      const input = document.getElementById('edit-text');
+      overlay.addEventListener('transitionend', () => input.focus(), { once: true });
+      // Fallback caso transitionend não dispare (ex: prefers-reduced-motion)
+      requestAnimationFrame(() => requestAnimationFrame(() => input.focus()));
     }
     function closeEdit() {
       document.getElementById('edit-overlay').classList.remove('open');
@@ -6537,12 +6626,14 @@
       task.col = newCol;
       // Registra ou limpa completedAt ao mudar coluna pelo modal
       if (newCol === 'done' && !task.completedAt) task.completedAt = new Date().toISOString();
-      if (newCol !== 'done') task.completedAt = null;
-      // Salva tags (split por vírgula, trim, filtra vazias, max 5 tags de 20 chars)
+      else if (newCol !== 'done') task.completedAt = null;
+      // Salva tags: split por vírgula, trim, remove duplicatas (Set), filtra vazias, max 5 de 20 chars
       const rawTags = document.getElementById('edit-tags').value;
-      task.tags = rawTags.split(',').map(t => t.trim().toLowerCase().replace(/[^a-z0-9áéíóúàãõ_-]/gi, '').slice(0, 20)).filter(Boolean).slice(0, 5);
-      if (newCol === 'done' && !task.completedAt) task.completedAt = new Date().toISOString();
-      if (newCol !== 'done') task.completedAt = null;
+      task.tags = [...new Set(
+        rawTags.split(',')
+          .map(t => t.trim().toLowerCase().replace(/[^a-z0-9áéíóúàãõ_-]/gi, '').slice(0, 20))
+          .filter(Boolean)
+      )].slice(0, 5);
       closeEdit();
       saveState(); scheduleRender(); updateStats();
       if (oldCol !== newCol) { bumpCounter(oldCol); bumpCounter(newCol); }
@@ -7521,15 +7612,29 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
     async function saveGroupTasks() {
       if (!GROUP_TOKEN) return;
       const groupTasks = STATE.tasks.filter(t => t.profile === 'grupo');
-      try {
-        await fetch('/api/groups', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROUP_TOKEN },
-          body: JSON.stringify({ action: 'save', tasks: groupTasks })
-        });
-        // Atualiza hash local — próximo poll ignora este save como "mudança externa"
-        GROUP_LAST_UPDATED = _hashTasks(groupTasks);
-      } catch { /* silencioso */ }
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 8000);
+        try {
+          const res = await fetch('/api/groups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROUP_TOKEN },
+            body: JSON.stringify({ action: 'save', tasks: groupTasks }),
+            signal: ctrl.signal
+          });
+          clearTimeout(tid);
+          if (res.ok) {
+            GROUP_LAST_UPDATED = _hashTasks(groupTasks);
+            return;
+          }
+          if (res.status === 401) { leaveGroup(); return; }
+          throw new Error(`HTTP ${res.status}`);
+        } catch (e) {
+          clearTimeout(tid);
+          if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          else console.error('[saveGroupTasks] Falha após 3 tentativas:', e.message);
+        }
+      }
     }
 
     /* ── Polling com backoff exponencial: detecta mudanças de outros membros ── */
@@ -7544,7 +7649,13 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
       GROUP_POLL_ID = setTimeout(async () => {
         if (!GROUP_TOKEN) return stopGroupPolling();
         try {
-          const res = await fetch('/api/groups', { headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN } });
+          const _ctrl = new AbortController();
+          const _tid = setTimeout(() => _ctrl.abort(), 7000);
+          const res = await fetch('/api/groups', {
+            headers: { 'Authorization': 'Bearer ' + GROUP_TOKEN },
+            signal: _ctrl.signal
+          });
+          clearTimeout(_tid);
           if (res.status === 401) { leaveGroup(); return; }
           const data = await res.json();
           if (!data || !Array.isArray(data.tasks)) {
@@ -7645,16 +7756,20 @@ Para sugerir tarefas específicas, inicie a linha com "TAREFA:" — o usuário p
     /* ─── ORDENAÇÃO ─── */
     const PRIO_ORDER = { high: 0, medium: 1, low: 2 };
     function applySort(tasks) {
+      // Usar else-if evita avaliar todos os branches a cada comparação
       return [...tasks].sort((a, b) => {
         let cmp = 0;
-        if (SORT_BY === 'date') cmp = new Date(b.date) - new Date(a.date);
-        if (SORT_BY === 'priority') cmp = (PRIO_ORDER[a.priority || 'medium'] || 1) - (PRIO_ORDER[b.priority || 'medium'] || 1);
-        if (SORT_BY === 'due') {
-          const ad = a.due ? new Date(a.due) : new Date('9999');
-          const bd = b.due ? new Date(b.due) : new Date('9999');
+        if (SORT_BY === 'date') {
+          cmp = new Date(b.date) - new Date(a.date);
+        } else if (SORT_BY === 'priority') {
+          cmp = (PRIO_ORDER[a.priority || 'medium'] ?? 1) - (PRIO_ORDER[b.priority || 'medium'] ?? 1);
+        } else if (SORT_BY === 'due') {
+          const ad = a.due ? new Date(a.due) : 8640000000000000;
+          const bd = b.due ? new Date(b.due) : 8640000000000000;
           cmp = ad - bd;
+        } else if (SORT_BY === 'alpha') {
+          cmp = a.text.localeCompare(b.text, 'pt-BR');
         }
-        if (SORT_BY === 'alpha') cmp = a.text.localeCompare(b.text, 'pt-BR');
         return SORT_DIR === 'asc' ? cmp : -cmp;
       });
     }
