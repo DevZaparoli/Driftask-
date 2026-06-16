@@ -6029,14 +6029,37 @@
     /* ─── RELÓGIO ─── */
     function updateClock() {
       const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
       const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
       const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
       document.getElementById('clock-date').textContent =
         `${days[now.getDay()]}, ${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+
+      // Saudação por horário + nome extraído do email
+      const greetEl = document.getElementById('clock-greeting');
+      if (greetEl) {
+        const hr = now.getHours();
+        const saudacao = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+        const nome = (STATE.email || '').split('@')[0].split('.')[0];
+        const nomeFormatado = nome ? `, ${nome.charAt(0).toUpperCase() + nome.slice(1)}` : '';
+        let greetHTML = `${saudacao}${nomeFormatado}`;
+
+        // Tarefas com vencimento hoje
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const dueToday = STATE.tasks.filter(t =>
+          t.profile === STATE.profile && t.due && t.due.slice(0, 10) === todayStr && t.col !== 'done'
+        ).length;
+        if (dueToday > 0) {
+          greetEl.classList.add('has-due-today');
+          greetHTML += ` · <span>${dueToday} tarefa${dueToday > 1 ? 's' : ''} vence${dueToday > 1 ? 'm' : ''} hoje</span>`;
+        } else {
+          greetEl.classList.remove('has-due-today');
+        }
+        greetEl.innerHTML = greetHTML;
+      }
     }
     let _clockInterval = setInterval(updateClock, 1000);
     document.addEventListener('visibilitychange', () => {
@@ -6129,15 +6152,29 @@
       const highPrio = all.filter(t => (t.priority || 'medium') === 'high' && t.col !== 'done').length;
 
       const doing = all.filter(t => t.col === 'doing').length;
-      document.getElementById('stat-total').textContent = total;
+      // Counter-up: anima de 0 até o valor em 400ms com rAF
+      function animateCount(el, target, suffix = '') {
+        if (!el) return;
+        const start = performance.now();
+        const duration = 400;
+        const from = parseInt(el.textContent) || 0;
+        function step(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+          el.textContent = Math.round(from + (target - from) * ease) + suffix;
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+      animateCount(document.getElementById('stat-total'), total);
       document.getElementById('stat-total-sub').textContent = total === 1 ? '1 tarefa' : `${total} tarefas`;
       document.getElementById('stat-done').textContent = `${done} (${pct}%)`;
       document.getElementById('stat-done-bar').style.width = pct + '%';
-      document.getElementById('stat-overdue').textContent = overdue;
+      animateCount(document.getElementById('stat-overdue'), overdue);
       const doingEl = document.getElementById('stat-doing');
-      if (doingEl) doingEl.textContent = doing;
+      if (doingEl) animateCount(doingEl, doing);
       const pctEl = document.getElementById('stat-pct');
-      if (pctEl) pctEl.textContent = pct + '%';
+      if (pctEl) animateCount(pctEl, pct, '%');
       const overdueCard = document.getElementById('stat-overdue-card');
       if (overdueCard) {
         overdueCard.classList.toggle('stat-overdue-active', overdue > 0);
@@ -6231,15 +6268,23 @@
     /* ─── TOAST ─── */
     function showToast(msg, type = '') {
       const c = document.getElementById('toast-container');
+      // Limite de 3 toasts simultâneos — remove o mais antigo se necessário
+      while (c.children.length >= 3) c.firstElementChild.remove();
       const t = document.createElement('div');
       t.className = 'toast' + (type ? ' ' + type : '');
       const icons = { success: '✅', error: '❌', '': 'ℹ️' };
-      t.innerHTML = `<span>${icons[type] || ''}</span>${msg}`;
+      // Botão × apenas em toasts de erro
+      const closeBtn = type === 'error'
+        ? `<button class="toast-close" onclick="this.closest('.toast').remove()" aria-label="Fechar">×</button>`
+        : '';
+      t.innerHTML = `<span>${icons[type] || ''}</span>${msg}${closeBtn}`;
       c.appendChild(t);
+      // Duração por tipo: success=2s | error=5s | padrão=2.8s
+      const dur = type === 'success' ? 2000 : type === 'error' ? 5000 : 2800;
       setTimeout(() => {
         t.classList.add('out');
         t.addEventListener('animationend', () => t.remove(), { once: true });
-      }, 2800);
+      }, dur);
     }
 
     /* ─── BUSCA (com debounce de 150ms) ─── */
