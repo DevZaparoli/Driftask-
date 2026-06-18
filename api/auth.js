@@ -9,7 +9,12 @@ import jwt                   from 'jsonwebtoken';
 
 const JWT_SECRET  = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '30d';
-const SALT_ROUNDS = 12;
+// SALT_ROUNDS = 10 é o padrão recomendado pela OWASP para bcrypt em 2024+.
+// Cada round dobra o tempo de processamento: 12 rounds custava ~300-400ms
+// por hash/compare em CPU serverless compartilhada (Vercel), causando login
+// perceptivelmente lento. 10 rounds mantém proteção forte contra brute-force
+// (ainda ordens de magnitude mais lento que SHA simples) com ~65-100ms.
+const SALT_ROUNDS = 10;
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json');
