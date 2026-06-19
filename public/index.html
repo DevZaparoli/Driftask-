@@ -44,6 +44,23 @@
       --radius-md: 14px;
       --radius-lg: 20px;
       --radius-xl: 28px;
+      /* ── Cores semânticas ── */
+      --color-danger:       #ef4444;
+      --color-danger-soft:  rgba(239, 68, 68, 0.12);
+      --color-danger-glow:  rgba(239, 68, 68, 0.28);
+      --color-success:      #10b981;
+      --color-success-soft: rgba(16, 185, 129, 0.12);
+      --color-success-glow: rgba(16, 185, 129, 0.28);
+      --color-warning:      #f59e0b;
+      --color-warning-soft: rgba(245, 158, 11, 0.12);
+      --color-info:         #3b82f6;
+      --color-info-soft:    rgba(59, 130, 246, 0.12);
+      /* ── Z-index stack ── */
+      --z-base:     10;
+      --z-dropdown: 100;
+      --z-sticky:   200;
+      --z-modal:    400;
+      --z-toast:    500;
     }
 
     [data-theme="light"] {
@@ -70,6 +87,23 @@
       --grad-3: #e0e7ff;
       --shadow-card: 0 4px 20px rgba(100, 80, 200, 0.10);
       --shadow-float: 0 8px 32px rgba(100, 80, 200, 0.18);
+      /* ── Cores semânticas (light) ── */
+      --color-danger:       #dc2626;
+      --color-danger-soft:  rgba(220, 38, 38, 0.10);
+      --color-danger-glow:  rgba(220, 38, 38, 0.22);
+      --color-success:      #059669;
+      --color-success-soft: rgba(5, 150, 105, 0.10);
+      --color-success-glow: rgba(5, 150, 105, 0.22);
+      --color-warning:      #d97706;
+      --color-warning-soft: rgba(217, 119, 6, 0.10);
+      --color-info:         #2563eb;
+      --color-info-soft:    rgba(37, 99, 235, 0.10);
+      /* ── Z-index stack ── */
+      --z-base:     10;
+      --z-dropdown: 100;
+      --z-sticky:   200;
+      --z-modal:    400;
+      --z-toast:    500;
     }
 
     *,
@@ -78,6 +112,14 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    /* ── Focus visível para navegação por teclado (WCAG 2.1 AA) ── */
+    :focus { outline: none; }
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     html {
@@ -658,7 +700,7 @@
       background: var(--group-accent-soft);
       border: 1px solid rgba(16, 185, 129, 0.2);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -773,7 +815,7 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
       white-space: nowrap;
     }
 
@@ -1024,7 +1066,7 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .layout-btn.active {
@@ -1574,7 +1616,7 @@
       font-weight: 600;
       color: var(--text-2);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
     }
 
     .profile-btn.active {
@@ -1949,7 +1991,7 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       white-space: nowrap;
     }
 
@@ -1974,7 +2016,7 @@
       color: var(--text-2);
       font-size: 14px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -2030,7 +2072,7 @@
       color: var(--text-3);
       font-size: 11px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       white-space: nowrap;
     }
 
@@ -2133,7 +2175,7 @@
       padding: 2px 10px;
       min-width: 28px;
       text-align: center;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .column-count.bump {
@@ -2203,7 +2245,7 @@
       font-weight: 600;
       color: var(--text-3);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2419,7 +2461,7 @@
       background: transparent;
       color: var(--text-3);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       line-height: 1.4;
       position: relative;
     }
@@ -2519,7 +2561,7 @@
       cursor: pointer;
       user-select: none;
       border: none;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .prio-badge:hover {
@@ -2867,7 +2909,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
-      z-index: 100;
+      z-index: var(--z-base);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s;
@@ -2880,6 +2922,7 @@
 
     .sidebar {
       position: fixed;
+      will-change: transform;
       top: 0;
       right: 0;
       height: 100%;
@@ -2888,7 +2931,7 @@
       border-left: 1px solid var(--border);
       backdrop-filter: var(--blur);
       -webkit-backdrop-filter: var(--blur);
-      z-index: 101;
+      z-index: var(--z-dropdown);
       padding: 24px 20px;
       display: flex;
       flex-direction: column;
@@ -2927,7 +2970,7 @@
       cursor: pointer;
       font-size: 14px;
       color: var(--text-2);
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .sidebar-close:hover {
@@ -3072,7 +3115,7 @@
       font-family: var(--font-body);
       font-weight: 500;
       font-size: 12px;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       text-align: center;
     }
 
@@ -3130,7 +3173,7 @@
       font-family: var(--font-body);
       font-size: 13px;
       font-weight: 500;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       text-align: left;
       display: flex;
       align-items: center;
@@ -3165,7 +3208,7 @@
       position: fixed;
       bottom: 28px;
       right: 28px;
-      z-index: 200;
+      z-index: var(--z-dropdown);
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -3201,7 +3244,7 @@
       position: fixed;
       bottom: 88px;
       right: 28px;
-      z-index: 200;
+      z-index: var(--z-dropdown);
       background: var(--bg-sidebar);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -3226,7 +3269,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(5px);
-      z-index: 400;
+      z-index: var(--z-modal);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s ease;
@@ -3313,7 +3356,7 @@
       cursor: pointer;
       font-size: 14px;
       color: var(--text-2);
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       flex-shrink: 0;
     }
 
@@ -3343,7 +3386,7 @@
       color: var(--text-3);
       cursor: pointer;
       font-family: var(--font-body);
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .ai-context-btn.active,
@@ -3373,7 +3416,7 @@
       cursor: pointer;
       font-family: var(--font-body);
       text-align: left;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .ai-sug-btn:hover {
@@ -3463,7 +3506,7 @@
       cursor: pointer;
       font-weight: 700;
       font-family: var(--font-body);
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -3527,7 +3570,7 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.55);
       backdrop-filter: blur(8px);
-      z-index: 400;
+      z-index: var(--z-modal);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s;
@@ -3587,7 +3630,7 @@
       cursor: pointer;
       font-size: 14px;
       color: var(--text-2);
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .modal-close:hover {
@@ -3676,7 +3719,7 @@
       font-family: var(--font-body);
       font-size: 13px;
       font-weight: 600;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .btn-secondary:hover {
@@ -3895,7 +3938,7 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
       text-align: center;
     }
 
@@ -3958,7 +4001,7 @@
       color: var(--text-2);
       font-weight: 500;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      z-index: 800;
+      z-index: var(--z-sticky);
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s, transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -4024,7 +4067,7 @@
       font-size: 10px;
       color: var(--text-3);
       font-weight: 500;
-      z-index: 200;
+      z-index: var(--z-dropdown);
       opacity: 0;
       transition: opacity 0.3s;
       pointer-events: none;
@@ -4182,7 +4225,7 @@
       font-family: var(--font-body);
       font-size: 13px;
       font-weight: 600;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .confirm-cancel:hover {
@@ -4201,7 +4244,7 @@
       font-family: var(--font-display);
       font-size: 13px;
       font-weight: 700;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .confirm-delete:hover {
@@ -4303,7 +4346,7 @@
     .admin-token-overlay {
       position: fixed;
       inset: 0;
-      z-index: 10001;
+      z-index: calc(var(--z-modal) + 1);
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(10px);
       display: none;
@@ -4396,7 +4439,7 @@
       font-family: var(--font-display);
       font-size: 13px;
       font-weight: 700;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .admin-token-copy:hover {
@@ -4480,7 +4523,7 @@
       font-family: var(--font-display);
       font-size: 14px;
       font-weight: 700;
-      transition: all 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, opacity 0.15s, transform 0.15s;
     }
 
     .delete-account-confirm-btn:hover {
@@ -4497,7 +4540,7 @@
     .onboard-overlay {
       position: fixed;
       inset: 0;
-      z-index: 10000;
+      z-index: var(--z-modal);
       background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(12px);
       display: flex;
@@ -4543,6 +4586,20 @@
       color: var(--text-2);
       line-height: 1.6;
     }
+
+  /* ── 480px: mobile pequeno (iPhone SE, Galaxy A) ── */
+  @media (max-width: 480px) {
+    .add-bar { flex-direction: column; gap: 6px; }
+    .add-bar-controls { width: 100%; justify-content: space-between; }
+    #task-input { width: 100%; }
+    .add-btn { width: 100%; min-width: unset; }
+    .stats-bar { grid-template-columns: 1fr 1fr !important; }
+    .clock-bar { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 14px; }
+    #clock-time { font-size: 18px; }
+    .sort-row { flex-wrap: wrap; gap: 6px; }
+    .search-bar { width: 100%; }
+  }
+
   </style>
 </head>
 
@@ -5831,25 +5888,53 @@
         }
       });
 
+      // Timeout de 10s — evita loading infinito em caso de servidor lento
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 10000);
+
       try {
         const res = await fetch('/api/tasks', {
           method: 'GET',
-          headers: { 'Authorization': `Bearer ${STATE.token}` }
+          headers: { 'Authorization': `Bearer ${STATE.token}` },
+          signal: ctrl.signal
         });
+        clearTimeout(timeoutId);
+
         if (res.status === 401) { logoutUser(); return; }
 
         const data = await res.json();
         if (data && Array.isArray(data.tasks)) {
           STATE.tasks = data.tasks;
-          tasksLoaded = true; // ✅ Libera o sync
+          tasksLoaded = true;
           renderAll();
           updateStats();
           checkOnboard();
         }
       } catch (err) {
-        showToast('Erro ao carregar dados do MongoDB.', 'error');
-        // Restaura empty state normal
-        renderAll();
+        clearTimeout(timeoutId);
+        const isTimeout = err.name === 'AbortError';
+        const msg = isTimeout ? 'Tempo limite esgotado ao carregar tarefas.' : 'Erro ao carregar dados. Verifique sua conexão.';
+
+        // Mostra erro com botão de retry em vez de deixar o usuário preso
+        ['todo', 'doing', 'done'].forEach(col => {
+          const empty = document.getElementById(`empty-${col}`);
+          if (empty && col === 'todo') {
+            empty.style.display = 'flex';
+            empty.style.flexDirection = 'column';
+            empty.style.gap = '12px';
+            empty.innerHTML = `
+              <span class="empty-state-icon" style="opacity:0.5">⚠️</span>
+              <span style="color:var(--text-2);font-size:13px;">${msg}</span>
+              <button onclick="loadTasksFromMongoDB()" style="
+                background:var(--accent-soft);border:1px solid var(--accent);
+                color:var(--accent);border-radius:var(--radius-md);
+                padding:8px 20px;font-size:13px;cursor:pointer;font-family:var(--font-body);
+              ">↻ Tentar novamente</button>
+            `;
+          } else if (empty) {
+            empty.style.display = 'none';
+          }
+        });
       }
     }
 
@@ -6881,7 +6966,13 @@
         input.placeholder = PLACEHOLDERS[phIndex];
       }
     }
-    setInterval(rotatePlaceholder, 4000);
+    const _placeholderInterval = setInterval(rotatePlaceholder, 4000);
+    // Pausa rotação quando a aba fica oculta (economiza CPU/bateria)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearInterval(_placeholderInterval);
+      }
+    });
 
     /* ─── EXPORT / IMPORT ─── */
     function exportData() {
