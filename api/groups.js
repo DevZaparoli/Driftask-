@@ -12,6 +12,8 @@ import jwt    from 'jsonwebtoken';
 import crypto from 'crypto';
 
 const JWT_SECRET  = process.env.JWT_SECRET;
+
+const _ORIGIN = process.env.ALLOWED_ORIGIN || 'https://driftask.vercel.app';
 const SALT_ROUNDS = 10;
 
 function json(res, status, body) {
@@ -48,7 +50,7 @@ function safeTasks(tasks) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Origin', _ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -155,6 +157,11 @@ export default async function handler(req, res) {
 
     const { tasks } = req.body;
     if (!Array.isArray(tasks)) return json(res, 400, { error: 'Campo "tasks" deve ser um array.' });
+
+    const GROUP_TASK_LIMIT = 200;
+    if (tasks.length > GROUP_TASK_LIMIT) {
+      return json(res, 400, { error: `Limite de ${GROUP_TASK_LIMIT} tarefas por grupo atingido.` });
+    }
 
     const { ObjectId } = await import('mongodb');
     await groups.updateOne(
