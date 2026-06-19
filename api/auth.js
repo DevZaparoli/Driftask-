@@ -9,6 +9,8 @@ import jwt                   from 'jsonwebtoken';
 
 const JWT_SECRET  = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '30d';
+
+const _ORIGIN = process.env.ALLOWED_ORIGIN || 'https://driftask.vercel.app';
 // SALT_ROUNDS = 10 é o padrão recomendado pela OWASP para bcrypt em 2024+.
 // Cada round dobra o tempo de processamento: 12 rounds custava ~300-400ms
 // por hash/compare em CPU serverless compartilhada (Vercel), causando login
@@ -30,7 +32,7 @@ function escapeRegex(str) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Origin', _ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
