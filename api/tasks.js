@@ -8,6 +8,8 @@ import jwt                   from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const _ORIGIN = process.env.ALLOWED_ORIGIN || 'https://driftask.vercel.app';
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function json(res, status, body) {
@@ -30,7 +32,7 @@ function verifyToken(req) {
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Origin', _ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -80,6 +82,12 @@ export default async function handler(req, res) {
 
     if (!Array.isArray(tasks)) {
       return json(res, 400, { error: 'Campo "tasks" deve ser um array.' });
+    }
+
+    // Limite de segurança: evita payload malicioso ou runaway de dados
+    const TASK_LIMIT = 500;
+    if (tasks.length > TASK_LIMIT) {
+      return json(res, 400, { error: `Limite de ${TASK_LIMIT} tarefas por usuário atingido.` });
     }
 
     // Limpa campos potencialmente perigosos de cada tarefa
