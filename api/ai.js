@@ -3,6 +3,8 @@
 // { system, messages: [...] } → conversa com histórico completo
 
 const GROQ_KEY   = process.env.GROQ_API_KEY;
+
+const _ORIGIN = process.env.ALLOWED_ORIGIN || 'https://driftask.vercel.app';
 const MODEL      = 'llama-3.3-70b-versatile';
 const MAX_TOKENS = 1024;
 const MAX_HIST   = 20;
@@ -14,7 +16,7 @@ function json(res, status, body) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Origin', _ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
